@@ -78,8 +78,8 @@
                             <i class="fa-solid fa-list-ol"></i>
                         </div>
                         <div>
-                            <h4 class="font-bold text-lg text-white">Top / All Songs</h4>
-                            <p class="text-xs text-slate-400">Rank top tracks across discography head-to-head</p>
+                            <h4 class="font-bold text-lg text-white">All Discography Songs</h4>
+                            <p class="text-xs text-slate-400">Rank tracks across all albums head-to-head</p>
                         </div>
                     </div>
                 </div>
@@ -194,22 +194,16 @@
                 logDebug("Requesting new Spotify Access Token from Worker...");
                 try {
                     const response = await fetch(WORKER_TOKEN_URL);
-                    if (!response.ok) {
-                        throw new Error(`Worker status ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`Worker status ${response.status}`);
                     const data = await response.json();
                     if (data.access_token) {
                         this.accessToken = data.access_token;
                         logDebug("Token obtained successfully.");
                         return true;
-                    } else {
-                        logDebug("Worker returned payload without access_token", data);
-                        showStatus("Failed to obtain Spotify access token from worker proxy.", true);
-                        return false;
                     }
+                    return false;
                 } catch (err) {
                     logDebug("Token fetch failed", { error: err.message });
-                    showStatus("Error connecting to backend proxy. Check console or download debug log.", true);
                     return false;
                 }
             },
@@ -227,7 +221,6 @@
                     });
 
                     if (res.status === 401) {
-                        logDebug("Token expired (401). Refreshing token and retrying...");
                         const ok = await this.initToken();
                         if (ok) {
                             res = await fetch(url, {
@@ -242,10 +235,9 @@
                         return null;
                     }
 
-                    const data = await res.json();
-                    return data;
+                    return await res.json();
                 } catch (err) {
-                    logDebug("Network error while calling Spotify API", { error: err.message, url });
+                    logDebug("Network error", { error: err.message, url });
                     return null;
                 }
             },
@@ -256,7 +248,6 @@
             },
 
             async getArtistAlbums(artistId) {
-                // FIXED: Added &market=US so Spotify accepts the limit parameter
                 const data = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&market=US&limit=50`);
                 if (!data || !data.items) return [];
 
@@ -267,18 +258,6 @@
                     seenNames.add(cleanName);
                     return true;
                 });
-            },
-
-            async getArtistTopTracks(artistId) {
-                const data = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`);
-                if (!data || !data.tracks) return [];
-
-                return data.tracks.map(t => ({
-                    id: t.id,
-                    name: t.name,
-                    albumName: t.album?.name || 'Top Track',
-                    albumImg: t.album?.images?.[0]?.url || ''
-                }));
             },
 
             async getAlbumTracks(albumId, albumName, albumImg) {
@@ -293,7 +272,7 @@
                 }));
             }
         };
-        
+
         function hideAllViews() {
             document.querySelectorAll('.view-tab').forEach(el => el.classList.add('hidden'));
         }
@@ -440,14 +419,12 @@
             showStatus("Loading tracks...", false);
 
             if (mode === 'album' && album) {
-                logDebug(`Loading tracks for album: ${album.name} (ID: ${album.id})`);
+                logDebug(`Loading tracks for album: ${album.name}`);
                 const imgUrl = album.images && album.images.length > 0 ? album.images[0].url : '';
                 activeTracksPool = await spotifyClient.getAlbumTracks(album.id, album.name, imgUrl);
             } else if (mode === 'all') {
-                logDebug(`Loading top tracks and discography for artist: ${currentArtist.name}`);
-                activeTracksPool = await spotifyClient.getArtistTopTracks(currentArtist.id);
-
-                for (const alb of artistAlbums.slice(0, 5)) {
+                logDebug(`Loading tracks across all albums for: ${currentArtist.name}`);
+                for (const alb of artistAlbums) {
                     const imgUrl = alb.images && alb.images.length > 0 ? alb.images[0].url : '';
                     const tracks = await spotifyClient.getAlbumTracks(alb.id, alb.name, imgUrl);
                     activeTracksPool.push(...tracks);
@@ -465,7 +442,7 @@
             logDebug(`Total tracks loaded into pool: ${activeTracksPool.length}`);
 
             if (activeTracksPool.length < 2) {
-                showStatus(`Could not find at least 2 tracks for this selection (found ${activeTracksPool.length}). Try downloading debug log for details.`, true);
+                showStatus(`Could not find at least 2 tracks for this selection (found ${activeTracksPool.length}).`, true);
                 return;
             }
 
