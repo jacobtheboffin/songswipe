@@ -248,11 +248,18 @@
             },
 
             async getArtistAlbums(artistId) {
-                const data = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}/albums?market=US&include_groups=album,single`);
-                if (!data || !data.items) return [];
+                let url = `https://api.spotify.com/v1/artists/${artistId}/albums?market=US&include_groups=album,single`;
+                let allAlbums = [];
+
+                while (url) {
+                    const data = await this.fetchSpotify(url);
+                    if (!data || !data.items) break;
+                    allAlbums.push(...data.items);
+                    url = data.next; // Automatically gets the next page URL from Spotify if available
+                }
 
                 const seenNames = new Set();
-                return data.items.filter(album => {
+                return allAlbums.filter(album => {
                     const cleanName = album.name.toLowerCase().trim();
                     if (seenNames.has(cleanName)) return false;
                     seenNames.add(cleanName);
