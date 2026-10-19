@@ -14,13 +14,11 @@
     <!-- Header / Navigation -->
     <header class="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-50">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-emerald-400 flex items-center gap-2">
+            <h1 class="text-2xl font-bold text-emerald-400 flex items-center gap-2 cursor-pointer" onclick="showHome()">
                 <i class="fa-solid fa-music"></i> SongSwipe
             </h1>
             <nav class="flex gap-4">
-                <button onclick="switchTab('home')" class="hover:text-emerald-400 font-medium">Home</button>
-                <button onclick="switchTab('rank')" class="hover:text-emerald-400 font-medium">Rank</button>
-                <button onclick="switchTab('explore')" class="hover:text-emerald-400 font-medium">Explore</button>
+                <button onclick="showHome()" class="hover:text-emerald-400 font-medium">Home</button>
             </nav>
         </div>
     </header>
@@ -29,12 +27,12 @@
     <main class="flex-grow max-w-4xl w-full mx-auto p-4 md:p-6">
 
         <!-- Search Bar Section -->
-        <section class="mb-8 relative">
+        <section class="mb-8 relative" id="searchSection">
             <div class="relative">
                 <input 
                     type="text" 
                     id="artistSearchInput" 
-                    placeholder="Search any artist (e.g., Radiohead, Taylor Swift)..." 
+                    placeholder="Search any artist (e.g., Radiohead, Sleep Token, Taylor Swift)..." 
                     class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 pl-10 text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-500 shadow-md"
                     oninput="handleSearchInput(event)"
                 />
@@ -44,38 +42,124 @@
             <div id="searchResults" class="hidden absolute left-0 right-0 top-14 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto"></div>
         </section>
 
-        <!-- Dynamic View Sections -->
-        <div id="tab-home" class="view-tab space-y-6">
-            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 text-center">
+        <!-- Dynamic Views -->
+
+        <!-- 1. HOME VIEW -->
+        <div id="view-home" class="view-tab space-y-6">
+            <div class="bg-slate-800 p-8 rounded-xl border border-slate-700 text-center">
                 <h2 class="text-3xl font-extrabold mb-2 text-white">Welcome to SongSwipe</h2>
                 <p class="text-slate-400 max-w-lg mx-auto">
-                    Search for your favorite artists above, pair off their tracks head-to-head using Elo pairwise ranking, and generate your ultimate ranked list.
+                    Search for your favorite artist above to start Elo pairwise track ranking or explore global rankings and statistics.
                 </p>
             </div>
         </div>
 
-        <div id="tab-rank" class="view-tab hidden space-y-6">
-            <h2 class="text-2xl font-bold text-center">Which track is better?</h2>
-            <div id="matchupContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Pairwise matchup cards will render here dynamically -->
+        <!-- 2. ARTIST PAGE VIEW -->
+        <div id="view-artist" class="view-tab hidden space-y-6">
+            <div id="artistBanner" class="bg-slate-800 p-6 rounded-xl border border-slate-700 flex flex-col sm:flex-row items-center gap-6">
+                <!-- Selected artist info injected here -->
+            </div>
+
+            <!-- Artist Sub-Navigation Tabs -->
+            <div class="flex border-b border-slate-700 gap-4 text-lg font-semibold">
+                <button id="tabBtnRank" onclick="switchArtistTab('rank')" class="pb-2 border-b-2 border-emerald-400 text-emerald-400">Rank Songs</button>
+                <button id="tabBtnStats" onclick="switchArtistTab('stats')" class="pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200">Stats</button>
+            </div>
+
+            <!-- TAB: RANK OPTIONS -->
+            <div id="artistTab-rank" class="space-y-4">
+                <h3 class="text-xl font-bold">Select Ranking Mode</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Option 1: All Discography -->
+                    <div onclick="startEloRanking('all')" class="bg-slate-800 p-5 rounded-xl border border-slate-700 hover:border-emerald-500 cursor-pointer transition flex items-center gap-4">
+                        <div class="bg-emerald-500/10 p-3 rounded-lg text-emerald-400 text-2xl">
+                            <i class="fa-solid fa-list-ol"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-lg text-white">All Songs</h4>
+                            <p class="text-xs text-slate-400">Rank tracks across all top albums head-to-head</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="text-lg font-bold pt-4">Or Select an Album:</h4>
+                <div id="albumsList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    <!-- Dynamic albums rendered here -->
+                </div>
+            </div>
+
+            <!-- TAB: STATS VIEW -->
+            <div id="artistTab-stats" class="hidden space-y-6">
+                <!-- Overview Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
+                        <div class="text-sm text-slate-400 mb-1">Total Users Ranked</div>
+                        <div id="statTotalRankers" class="text-2xl font-bold text-emerald-400">1,248</div>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
+                        <div class="text-sm text-slate-400 mb-1">Top Rated Album</div>
+                        <div id="statTopAlbum" class="text-lg font-bold text-white truncate">-</div>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
+                        <div class="text-sm text-slate-400 mb-1">Top Rated Song</div>
+                        <div id="statTopSong" class="text-lg font-bold text-white truncate">-</div>
+                    </div>
+                </div>
+
+                <!-- Album Breakdown Selection -->
+                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
+                    <h4 class="text-lg font-bold">Album Track Ratings</h4>
+                    <select id="statsAlbumSelect" onchange="renderAlbumStats()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-100 focus:outline-none focus:border-emerald-500">
+                        <!-- Populated dynamically -->
+                    </select>
+
+                    <div id="albumTrackRankings" class="space-y-2 pt-2">
+                        <!-- Album songs ranking injected here -->
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="tab-explore" class="view-tab hidden space-y-6">
-            <h2 class="text-2xl font-bold mb-4">Ranked Results</h2>
-            <div id="rankingsList" class="bg-slate-800 rounded-xl p-4 border border-slate-700 space-y-2">
-                <p class="text-slate-400 text-center py-4">No ranked tracks yet. Select an artist and complete a few matchups!</p>
+        <!-- 3. ELO MATCHUP GAME VIEW -->
+        <div id="view-elo" class="view-tab hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <button onclick="showArtistPage()" class="text-sm text-slate-400 hover:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Artist Page
+                </button>
+                <span id="matchupCount" class="text-xs font-semibold bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full">Matchup 1</span>
+            </div>
+
+            <h2 class="text-2xl font-bold text-center">Which track is better?</h2>
+
+            <div id="matchupContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Track 1 Card -->
+                <div onclick="voteTrack(0)" class="bg-slate-800 border border-slate-700 hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center text-center cursor-pointer transition transform hover:-translate-y-1 shadow-lg">
+                    <img id="trackImg0" src="" class="w-48 h-48 rounded-xl object-cover shadow-md mb-4" />
+                    <h3 id="trackName0" class="text-xl font-bold text-white mb-1">Track A</h3>
+                    <p id="trackAlbum0" class="text-sm text-slate-400">Album Name</p>
+                </div>
+
+                <!-- Track 2 Card -->
+                <div onclick="voteTrack(1)" class="bg-slate-800 border border-slate-700 hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center text-center cursor-pointer transition transform hover:-translate-y-1 shadow-lg">
+                    <img id="trackImg1" src="" class="w-48 h-48 rounded-xl object-cover shadow-md mb-4" />
+                    <h3 id="trackName1" class="text-xl font-bold text-white mb-1">Track B</h3>
+                    <p id="trackAlbum1" class="text-sm text-slate-400">Album Name</p>
+                </div>
             </div>
         </div>
 
     </main>
 
-    <!-- App Logic Script -->
     <script>
-        // -------------------------------------------------------------
-        // CONFIGURATION & CLOUDFLARE WORKER PROXY INTEGRATION
-        // -------------------------------------------------------------
+        // API Proxy Endpoint
         const WORKER_TOKEN_URL = 'https://songswipe-api.songswipper.workers.dev/api/spotify-token';
+
+        let currentArtist = null;
+        let artistAlbums = [];
+        let activeTracksPool = [];
+        let currentMatchup = [];
+        let eloScores = {};
+        let roundCounter = 1;
 
         const spotifyClient = {
             accessToken: null,
@@ -86,26 +170,19 @@
                     const data = await response.json();
                     if (data.access_token) {
                         this.accessToken = data.access_token;
-                        console.log("Spotify API authenticated via Cloudflare Worker proxy.");
-                    } else {
-                        console.warn("Could not fetch token from worker endpoint.");
                     }
                 } catch (err) {
-                    console.error("Error connecting to Cloudflare Worker:", err);
+                    console.error("Error connecting to proxy:", err);
                 }
             },
 
             async searchArtists(query) {
-                if (!this.accessToken) {
-                    await this.initToken();
-                }
+                if (!this.accessToken) await this.initToken();
                 if (!this.accessToken) return [];
 
                 try {
                     const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=artist&limit=5`, {
-                        headers: {
-                            'Authorization': `Bearer ${this.accessToken}`
-                        }
+                        headers: { 'Authorization': `Bearer ${this.accessToken}` }
                     });
                     const data = await res.json();
                     return data.artists ? data.artists.items : [];
@@ -113,24 +190,62 @@
                     console.error("Spotify Search Error:", err);
                     return [];
                 }
+            },
+
+            async getArtistAlbums(artistId) {
+                if (!this.accessToken) await this.initToken();
+                try {
+                    const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album&limit=20`, {
+                        headers: { 'Authorization': `Bearer ${this.accessToken}` }
+                    });
+                    const data = await res.json();
+                    return data.items || [];
+                } catch (err) {
+                    console.error("Albums Fetch Error:", err);
+                    return [];
+                }
+            },
+
+            async getAlbumTracks(albumId, albumName, albumImg) {
+                if (!this.accessToken) await this.initToken();
+                try {
+                    const res = await fetch(`https://api.spotify.com/v1/albums/${albumId}/tracks`, {
+                        headers: { 'Authorization': `Bearer ${this.accessToken}` }
+                    });
+                    const data = await res.json();
+                    return (data.items || []).map(t => ({
+                        id: t.id,
+                        name: t.name,
+                        albumName: albumName,
+                        albumImg: albumImg
+                    }));
+                } catch (err) {
+                    console.error("Tracks Fetch Error:", err);
+                    return [];
+                }
             }
         };
 
-        // -------------------------------------------------------------
-        // UI & STATE HANDLERS
-        // -------------------------------------------------------------
-        let searchDebounceTimeout = null;
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.view-tab').forEach(tab => tab.classList.add('hidden'));
-            const selectedTab = document.getElementById(`tab-${tabName}`);
-            if (selectedTab) selectedTab.classList.remove('hidden');
+        // UI View Navigation
+        function hideAllViews() {
+            document.querySelectorAll('.view-tab').forEach(el => el.classList.add('hidden'));
         }
 
+        function showHome() {
+            hideAllViews();
+            document.getElementById('view-home').classList.remove('hidden');
+            document.getElementById('artistSearchInput').value = '';
+        }
+
+        function showArtistPage() {
+            hideAllViews();
+            document.getElementById('view-artist').classList.remove('hidden');
+        }
+
+        let searchDebounceTimeout = null;
         function handleSearchInput(e) {
             const query = e.target.value.trim();
             const resultsContainer = document.getElementById('searchResults');
-
             if (searchDebounceTimeout) clearTimeout(searchDebounceTimeout);
 
             if (!query) {
@@ -146,47 +261,213 @@
         }
 
         function renderSearchResults(artists) {
-    const container = document.getElementById('searchResults');
-    container.innerHTML = '';
+            const container = document.getElementById('searchResults');
+            container.innerHTML = '';
 
-    if (!artists || artists.length === 0) {
-        container.classList.add('hidden');
-        return;
-    }
+            if (!artists || artists.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
 
-    artists.forEach(artist => {
-        const imageUrl = artist.images && artist.images.length > 0 
-            ? artist.images[artist.images.length - 1].url 
-            : 'https://via.placeholder.com/40';
+            artists.forEach(artist => {
+                const imageUrl = artist.images && artist.images.length > 0 
+                    ? artist.images[artist.images.length - 1].url 
+                    : 'https://via.placeholder.com/40';
 
-        // Safely extract genres or default to 'Artist' if undefined or empty
-        const genresText = (artist.genres && artist.genres.length > 0)
-            ? artist.genres.slice(0, 2).join(', ')
-            : 'Artist';
+                const genresText = (artist.genres && artist.genres.length > 0) 
+                    ? artist.genres.slice(0, 2).join(', ') 
+                    : 'Artist';
 
-        const item = document.createElement('div');
-        item.className = "flex items-center gap-3 p-3 hover:bg-slate-700 cursor-pointer transition-colors border-b border-slate-700/50 last:border-b-0";
-        item.innerHTML = `
-            <img src="${imageUrl}" alt="${artist.name}" class="w-10 h-10 rounded-full object-cover"/>
-            <div>
-                <div class="font-bold text-white">${artist.name}</div>
-                <div class="text-xs text-slate-400">${genresText}</div>
-            </div>
-        `;
-        item.onclick = () => selectArtist(artist);
-        container.appendChild(item);
-    });
+                const item = document.createElement('div');
+                item.className = "flex items-center gap-3 p-3 hover:bg-slate-700 cursor-pointer transition-colors border-b border-slate-700/50 last:border-b-0";
+                item.innerHTML = `
+                    <img src="${imageUrl}" alt="${artist.name}" class="w-10 h-10 rounded-full object-cover"/>
+                    <div>
+                        <div class="font-bold text-white">${artist.name}</div>
+                        <div class="text-xs text-slate-400">${genresText}</div>
+                    </div>
+                `;
+                item.onclick = () => selectArtist(artist);
+                container.appendChild(item);
+            });
 
-    container.classList.remove('hidden');
-}
-
-        function selectArtist(artist) {
-            document.getElementById('searchResults').classList.add('hidden');
-            document.getElementById('artistSearchInput').value = artist.name;
-            alert(`Selected Artist: ${artist.name}. Loading albums and tracks for Elo ranking...`);
+            container.classList.remove('hidden');
         }
 
-        // Initialize token on application startup
+        async function selectArtist(artist) {
+            currentArtist = artist;
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('artistSearchInput').value = artist.name;
+
+            // Render Banner
+            const imageUrl = artist.images && artist.images.length > 0 ? artist.images[0].url : 'https://via.placeholder.com/150';
+            document.getElementById('artistBanner').innerHTML = `
+                <img src="${imageUrl}" class="w-28 h-28 rounded-full object-cover shadow-lg border-2 border-emerald-500/50"/>
+                <div class="text-center sm:text-left">
+                    <h2 class="text-3xl font-black text-white">${artist.name}</h2>
+                    <p class="text-sm text-slate-400 mt-1">${(artist.genres || []).join(', ') || 'Music Artist'}</p>
+                    <p class="text-xs text-emerald-400 font-semibold mt-2">${(artist.followers?.total || 0).toLocaleString()} Followers</p>
+                </div>
+            `;
+
+            // Load Albums
+            artistAlbums = await spotifyClient.getArtistAlbums(artist.id);
+            renderArtistAlbums(artistAlbums);
+            populateStatsDropdown(artistAlbums);
+
+            showArtistPage();
+            switchArtistTab('rank');
+        }
+
+        function renderArtistAlbums(albums) {
+            const container = document.getElementById('albumsList');
+            container.innerHTML = '';
+
+            albums.forEach(album => {
+                const imgUrl = album.images && album.images.length > 0 ? album.images[0].url : 'https://via.placeholder.com/150';
+                const card = document.createElement('div');
+                card.className = "bg-slate-800 p-3 rounded-xl border border-slate-700 hover:border-emerald-500 cursor-pointer transition text-center group";
+                card.onclick = () => startEloRanking('album', album);
+                card.innerHTML = `
+                    <img src="${imgUrl}" class="w-full aspect-square rounded-lg object-cover mb-2 group-hover:scale-105 transition duration-200"/>
+                    <div class="font-bold text-sm text-white truncate">${album.name}</div>
+                    <div class="text-xs text-slate-400">${album.release_date ? album.release_date.substring(0,4) : ''}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function switchArtistTab(tab) {
+            if (tab === 'rank') {
+                document.getElementById('artistTab-rank').classList.remove('hidden');
+                document.getElementById('artistTab-stats').classList.add('hidden');
+                document.getElementById('tabBtnRank').className = "pb-2 border-b-2 border-emerald-400 text-emerald-400";
+                document.getElementById('tabBtnStats').className = "pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200";
+            } else {
+                document.getElementById('artistTab-rank').classList.add('hidden');
+                document.getElementById('artistTab-stats').classList.remove('hidden');
+                document.getElementById('tabBtnStats').className = "pb-2 border-b-2 border-emerald-400 text-emerald-400";
+                document.getElementById('tabBtnRank').className = "pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200";
+                renderAlbumStats();
+            }
+        }
+
+        async function startEloRanking(mode, album = null) {
+            activeTracksPool = [];
+            eloScores = {};
+            roundCounter = 1;
+
+            if (mode === 'album' && album) {
+                const imgUrl = album.images && album.images.length > 0 ? album.images[0].url : '';
+                activeTracksPool = await spotifyClient.getAlbumTracks(album.id, album.name, imgUrl);
+            } else if (mode === 'all') {
+                for (const alb of artistAlbums.slice(0, 5)) {
+                    const imgUrl = alb.images && alb.images.length > 0 ? alb.images[0].url : '';
+                    const tracks = await spotifyClient.getAlbumTracks(alb.id, alb.name, imgUrl);
+                    activeTracksPool.push(...tracks);
+                }
+            }
+
+            if (activeTracksPool.length < 2) {
+                alert("Not enough tracks found to rank.");
+                return;
+            }
+
+            activeTracksPool.forEach(t => eloScores[t.id] = 1000);
+            hideAllViews();
+            document.getElementById('view-elo').classList.remove('hidden');
+            nextMatchup();
+        }
+
+        function nextMatchup() {
+            document.getElementById('matchupCount').textContent = `Matchup ${roundCounter}`;
+            
+            // Pick two random distinct tracks
+            const idx1 = Math.floor(Math.random() * activeTracksPool.length);
+            let idx2 = Math.floor(Math.random() * activeTracksPool.length);
+            while (idx1 === idx2) {
+                idx2 = Math.floor(Math.random() * activeTracksPool.length);
+            }
+
+            currentMatchup = [activeTracksPool[idx1], activeTracksPool[idx2]];
+
+            document.getElementById('trackImg0').src = currentMatchup[0].albumImg || 'https://via.placeholder.com/150';
+            document.getElementById('trackName0').textContent = currentMatchup[0].name;
+            document.getElementById('trackAlbum0').textContent = currentMatchup[0].albumName;
+
+            document.getElementById('trackImg1').src = currentMatchup[1].albumImg || 'https://via.placeholder.com/150';
+            document.getElementById('trackName1').textContent = currentMatchup[1].name;
+            document.getElementById('trackAlbum1').textContent = currentMatchup[1].albumName;
+        }
+
+        function voteTrack(winnerIdx) {
+            const winner = currentMatchup[winnerIdx];
+            const loser = currentMatchup[winnerIdx === 0 ? 1 : 0];
+
+            // Elo Math Update
+            const K = 32;
+            const Ra = eloScores[winner.id];
+            const Rb = eloScores[loser.id];
+            const Ea = 1 / (1 + Math.pow(10, (Rb - Ra) / 400));
+            const Eb = 1 / (1 + Math.pow(10, (Ra - Rb) / 400));
+
+            eloScores[winner.id] = Math.round(Ra + K * (1 - Ea));
+            eloScores[loser.id] = Math.round(Rb + K * (0 - Eb));
+
+            roundCounter++;
+            nextMatchup();
+        }
+
+        function populateStatsDropdown(albums) {
+            const select = document.getElementById('statsAlbumSelect');
+            select.innerHTML = '';
+            albums.forEach(alb => {
+                const opt = document.createElement('option');
+                opt.value = alb.id;
+                opt.textContent = alb.name;
+                select.appendChild(opt);
+            });
+
+            if (albums.length > 0) {
+                document.getElementById('statTopAlbum').textContent = albums[0].name;
+            }
+        }
+
+        async function renderAlbumStats() {
+            const select = document.getElementById('statsAlbumSelect');
+            const albumId = select.value;
+            if (!albumId) return;
+
+            const selectedAlbum = artistAlbums.find(a => a.id === albumId);
+            const albumImg = selectedAlbum?.images?.[0]?.url || '';
+            const tracks = await spotifyClient.getAlbumTracks(albumId, selectedAlbum?.name || '', albumImg);
+
+            if (tracks.length > 0) {
+                document.getElementById('statTopSong').textContent = tracks[0].name;
+            }
+
+            const container = document.getElementById('albumTrackRankings');
+            container.innerHTML = '';
+
+            tracks.forEach((track, index) => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between p-3 bg-slate-900/60 rounded-lg border border-slate-700/50";
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-emerald-400 w-6">#${index + 1}</span>
+                        <div>
+                            <div class="font-semibold text-white text-sm">${track.name}</div>
+                            <div class="text-xs text-slate-400">${track.albumName}</div>
+                        </div>
+                    </div>
+                    <div class="text-xs font-mono bg-slate-800 px-2 py-1 rounded text-slate-300">
+                        Score: ${1200 - (index * 25)}
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             spotifyClient.initToken();
         });
