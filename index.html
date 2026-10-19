@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SongSwipe - Music Ranking & Exploration</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
@@ -38,7 +36,6 @@
                 />
                 <i class="fa-solid fa-search absolute left-3 top-3.5 text-slate-400"></i>
             </div>
-            <!-- Search Results Dropdown -->
             <div id="searchResults" class="hidden absolute left-0 right-0 top-14 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto"></div>
         </section>
 
@@ -49,7 +46,7 @@
             <div class="bg-slate-800 p-8 rounded-xl border border-slate-700 text-center">
                 <h2 class="text-3xl font-extrabold mb-2 text-white">Welcome to SongSwipe</h2>
                 <p class="text-slate-400 max-w-lg mx-auto">
-                    Search for your favorite artist above to start Elo pairwise track ranking or explore global rankings and statistics.
+                    Search for your favorite artist above to start Elo pairwise track ranking or explore rankings and statistics.
                 </p>
             </div>
         </div>
@@ -70,14 +67,13 @@
             <div id="artistTab-rank" class="space-y-4">
                 <h3 class="text-xl font-bold">Select Ranking Mode</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Option 1: All Discography -->
                     <div onclick="startEloRanking('all')" class="bg-slate-800 p-5 rounded-xl border border-slate-700 hover:border-emerald-500 cursor-pointer transition flex items-center gap-4">
                         <div class="bg-emerald-500/10 p-3 rounded-lg text-emerald-400 text-2xl">
                             <i class="fa-solid fa-list-ol"></i>
                         </div>
                         <div>
-                            <h4 class="font-bold text-lg text-white">All Songs</h4>
-                            <p class="text-xs text-slate-400">Rank tracks across all albums head-to-head</p>
+                            <h4 class="font-bold text-lg text-white">Top / All Songs</h4>
+                            <p class="text-xs text-slate-400">Rank top tracks across discography head-to-head</p>
                         </div>
                     </div>
                 </div>
@@ -90,11 +86,10 @@
 
             <!-- TAB: STATS VIEW -->
             <div id="artistTab-stats" class="hidden space-y-6">
-                <!-- Overview Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
                         <div class="text-sm text-slate-400 mb-1">Total Users Ranked</div>
-                        <div id="statTotalRankers" class="text-2xl font-bold text-emerald-400">1,248</div>
+                        <div id="statTotalRankers" class="text-2xl font-bold text-emerald-400">0</div>
                     </div>
                     <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
                         <div class="text-sm text-slate-400 mb-1">Top Rated Album</div>
@@ -106,15 +101,12 @@
                     </div>
                 </div>
 
-                <!-- Album Breakdown Selection -->
                 <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
                     <h4 class="text-lg font-bold">Album Track Ratings</h4>
                     <select id="statsAlbumSelect" onchange="renderAlbumStats()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-100 focus:outline-none focus:border-emerald-500">
-                        <!-- Populated dynamically -->
                     </select>
 
                     <div id="albumTrackRankings" class="space-y-2 pt-2">
-                        <!-- Album songs ranking injected here -->
                     </div>
                 </div>
             </div>
@@ -132,14 +124,12 @@
             <h2 class="text-2xl font-bold text-center">Which track is better?</h2>
 
             <div id="matchupContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Track 1 Card -->
                 <div onclick="voteTrack(0)" class="bg-slate-800 border border-slate-700 hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center text-center cursor-pointer transition transform hover:-translate-y-1 shadow-lg">
                     <img id="trackImg0" src="" class="w-48 h-48 rounded-xl object-cover shadow-md mb-4" />
                     <h3 id="trackName0" class="text-xl font-bold text-white mb-1">Track A</h3>
                     <p id="trackAlbum0" class="text-sm text-slate-400">Album Name</p>
                 </div>
 
-                <!-- Track 2 Card -->
                 <div onclick="voteTrack(1)" class="bg-slate-800 border border-slate-700 hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center text-center cursor-pointer transition transform hover:-translate-y-1 shadow-lg">
                     <img id="trackImg1" src="" class="w-48 h-48 rounded-xl object-cover shadow-md mb-4" />
                     <h3 id="trackName1" class="text-xl font-bold text-white mb-1">Track B</h3>
@@ -151,7 +141,6 @@
     </main>
 
     <script>
-        // API Proxy Endpoint
         const WORKER_TOKEN_URL = 'https://songswipe-api.songswipper.workers.dev/api/spotify-token';
 
         let currentArtist = null;
@@ -195,7 +184,6 @@
             async getArtistAlbums(artistId) {
                 if (!this.accessToken) await this.initToken();
                 try {
-                    // Added market=US so Spotify returns available results
                     const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&market=US&limit=50`, {
                         headers: { 'Authorization': `Bearer ${this.accessToken}` }
                     });
@@ -216,10 +204,28 @@
                 }
             },
 
+            async getArtistTopTracks(artistId) {
+                if (!this.accessToken) await this.initToken();
+                try {
+                    const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`, {
+                        headers: { 'Authorization': `Bearer ${this.accessToken}` }
+                    });
+                    const data = await res.json();
+                    return (data.tracks || []).map(t => ({
+                        id: t.id,
+                        name: t.name,
+                        albumName: t.album?.name || 'Top Track',
+                        albumImg: t.album?.images?.[0]?.url || ''
+                    }));
+                } catch (err) {
+                    console.error("Top Tracks Fetch Error:", err);
+                    return [];
+                }
+            },
+
             async getAlbumTracks(albumId, albumName, albumImg) {
                 if (!this.accessToken) await this.initToken();
                 try {
-                    // Added market=US here as well
                     const res = await fetch(`https://api.spotify.com/v1/albums/${albumId}/tracks?market=US&limit=50`, {
                         headers: { 'Authorization': `Bearer ${this.accessToken}` }
                     });
@@ -237,7 +243,6 @@
             }
         };
 
-        // UI View Navigation
         function hideAllViews() {
             document.querySelectorAll('.view-tab').forEach(el => el.classList.add('hidden'));
         }
@@ -310,7 +315,6 @@
             document.getElementById('searchResults').classList.add('hidden');
             document.getElementById('artistSearchInput').value = artist.name;
 
-            // Render Banner
             const imageUrl = artist.images && artist.images.length > 0 ? artist.images[0].url : 'https://via.placeholder.com/150';
             document.getElementById('artistBanner').innerHTML = `
                 <img src="${imageUrl}" class="w-28 h-28 rounded-full object-cover shadow-lg border-2 border-emerald-500/50"/>
@@ -321,7 +325,6 @@
                 </div>
             `;
 
-            // Load Albums automatically
             artistAlbums = await spotifyClient.getArtistAlbums(artist.id);
             renderArtistAlbums(artistAlbums);
             populateStatsDropdown(artistAlbums);
@@ -377,16 +380,27 @@
                 const imgUrl = album.images && album.images.length > 0 ? album.images[0].url : '';
                 activeTracksPool = await spotifyClient.getAlbumTracks(album.id, album.name, imgUrl);
             } else if (mode === 'all') {
-                // Fetch tracks across all retrieved albums automatically
-                for (const alb of artistAlbums) {
+                // First get top tracks to guarantee tracks exist
+                activeTracksPool = await spotifyClient.getArtistTopTracks(currentArtist.id);
+
+                // Fetch extra tracks from up to 5 albums
+                for (const alb of artistAlbums.slice(0, 5)) {
                     const imgUrl = alb.images && alb.images.length > 0 ? alb.images[0].url : '';
                     const tracks = await spotifyClient.getAlbumTracks(alb.id, alb.name, imgUrl);
                     activeTracksPool.push(...tracks);
                 }
+
+                // Remove duplicate track IDs
+                const seenIds = new Set();
+                activeTracksPool = activeTracksPool.filter(t => {
+                    if (seenIds.has(t.id)) return false;
+                    seenIds.add(t.id);
+                    return true;
+                });
             }
 
             if (activeTracksPool.length < 2) {
-                alert("Not enough tracks found to rank for this selection.");
+                alert("Not enough tracks found to start ranking for this selection.");
                 return;
             }
 
@@ -445,7 +459,10 @@
 
             if (albums.length > 0) {
                 document.getElementById('statTopAlbum').textContent = albums[0].name;
+            } else {
+                document.getElementById('statTopAlbum').textContent = '-';
             }
+            document.getElementById('statTotalRankers').textContent = '0';
         }
 
         async function renderAlbumStats() {
@@ -459,6 +476,8 @@
 
             if (tracks.length > 0) {
                 document.getElementById('statTopSong').textContent = tracks[0].name;
+            } else {
+                document.getElementById('statTopSong').textContent = '-';
             }
 
             const container = document.getElementById('albumTrackRankings');
@@ -474,9 +493,6 @@
                             <div class="font-semibold text-white text-sm">${track.name}</div>
                             <div class="text-xs text-slate-400">${track.albumName}</div>
                         </div>
-                    </div>
-                    <div class="text-xs font-mono bg-slate-800 px-2 py-1 rounded text-slate-300">
-                        Score: ${1200 - (index * 25)}
                     </div>
                 `;
                 container.appendChild(item);
