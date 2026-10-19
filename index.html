@@ -195,13 +195,12 @@
             async getArtistAlbums(artistId) {
                 if (!this.accessToken) await this.initToken();
                 try {
-                    // Fetch both albums and singles to make sure we don't miss material
-                    const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&limit=50`, {
+                    // Added market=US so Spotify returns available results
+                    const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&market=US&limit=50`, {
                         headers: { 'Authorization': `Bearer ${this.accessToken}` }
                     });
                     const data = await res.json();
                     
-                    // Deduplicate albums by name to keep things clean
                     const seenNames = new Set();
                     const uniqueAlbums = (data.items || []).filter(album => {
                         const cleanName = album.name.toLowerCase().trim();
@@ -220,7 +219,8 @@
             async getAlbumTracks(albumId, albumName, albumImg) {
                 if (!this.accessToken) await this.initToken();
                 try {
-                    const res = await fetch(`https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`, {
+                    // Added market=US here as well
+                    const res = await fetch(`https://api.spotify.com/v1/albums/${albumId}/tracks?market=US&limit=50`, {
                         headers: { 'Authorization': `Bearer ${this.accessToken}` }
                     });
                     const data = await res.json();
