@@ -248,7 +248,12 @@
             },
 
             async getArtistAlbums(artistId) {
-                const data = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&market=US&limit=50`);
+                const params = new URLSearchParams({
+                    include_groups: 'album,single',
+                    market: 'US',
+                    limit: '20'
+                });
+                const data = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}/albums?${params.toString()}`);
                 if (!data || !data.items) return [];
 
                 const seenNames = new Set();
@@ -261,7 +266,11 @@
             },
 
             async getAlbumTracks(albumId, albumName, albumImg) {
-                const data = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${albumId}/tracks?market=US&limit=50`);
+                const params = new URLSearchParams({
+                    market: 'US',
+                    limit: '50'
+                });
+                const data = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${albumId}/tracks?${params.toString()}`);
                 if (!data || !data.items) return [];
 
                 return data.items.map(t => ({
