@@ -248,8 +248,7 @@
             },
 
             async getArtistAlbums(artistId) {
-                // Simplified URL with zero custom limit or multi-group parameters to prevent 400 errors
-                const data = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}/albums?market=US`);
+                const data = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}/albums?market=US&limit=50`);
                 if (!data || !data.items) return [];
 
                 const seenNames = new Set();
