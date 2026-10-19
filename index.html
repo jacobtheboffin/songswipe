@@ -15,8 +15,11 @@
             <h1 class="text-2xl font-bold text-emerald-400 flex items-center gap-2 cursor-pointer" onclick="showHome()">
                 <i class="fa-solid fa-music"></i> SongSwipe
             </h1>
-            <nav class="flex gap-4">
-                <button onclick="showHome()" class="hover:text-emerald-400 font-medium">Home</button>
+            <nav class="flex gap-3 items-center">
+                <button onclick="downloadDebugLog()" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg border border-slate-600 text-slate-200 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-download"></i> Debug Log
+                </button>
+                <button onclick="showHome()" class="hover:text-emerald-400 font-medium text-sm">Home</button>
             </nav>
         </div>
     </header>
@@ -39,6 +42,9 @@
             <div id="searchResults" class="hidden absolute left-0 right-0 top-14 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto"></div>
         </section>
 
+        <!-- Status Message Banner -->
+        <div id="statusBanner" class="hidden mb-6 p-4 rounded-xl text-sm font-medium"></div>
+
         <!-- Dynamic Views -->
 
         <!-- 1. HOME VIEW -->
@@ -53,7 +59,7 @@
 
         <!-- 2. ARTIST PAGE VIEW -->
         <div id="view-artist" class="view-tab hidden space-y-6">
-            <div id="artistBanner" class="bg-slate-800 p-6 rounded-xl border border-slate-700 flex flex-col sm:flex-row items-center gap-6">
+            <div id="artistBanner" class="bg-slate-800 p-6 rounded-xl border border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-6">
                 <!-- Selected artist info injected here -->
             </div>
 
@@ -143,6 +149,37 @@
     <script>
         const WORKER_TOKEN_URL = 'https://songswipe-api.songswipper.workers.dev/api/spotify-token';
 
+        let debugLogs = [];
+        function logDebug(message, data = null) {
+            const timestamp = new Date().toISOString();
+            const logEntry = `[${timestamp}] ${message}` + (data ? ` | ${JSON.stringify(data)}` : '');
+            console.log(logEntry);
+            debugLogs.push(logEntry);
+        }
+
+        function downloadDebugLog() {
+            const blob = new Blob([debugLogs.join('\n')], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `songswipe-debug-${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showStatus(message, isError = false) {
+            const banner = document.getElementById('statusBanner');
+            banner.textContent = message;
+            banner.className = `mb-6 p-4 rounded-xl text-sm font-medium ${isError ? 'bg-red-500/10 border border-red-500/30 text-red-400' : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'}`;
+            banner.classList.remove('hidden');
+        }
+
+        function hideStatus() {
+            document.getElementById('statusBanner').classList.add('hidden');
+        }
+
         let currentArtist = null;
         let artistAlbums = [];
         let activeTracksPool = [];
@@ -154,92 +191,106 @@
             accessToken: null,
 
             async initToken() {
+                logDebug("Requesting new Spotify Access Token from Worker...");
                 try {
                     const response = await fetch(WORKER_TOKEN_URL);
+                    if (!response.ok) {
+                        throw new Error(`Worker status ${response.status}`);
+                    }
                     const data = await response.json();
                     if (data.access_token) {
                         this.accessToken = data.access_token;
+                        logDebug("Token obtained successfully.");
+                        return true;
+                    } else {
+                        logDebug("Worker returned payload without access_token", data);
+                        showStatus("Failed to obtain Spotify access token from worker proxy.", true);
+                        return false;
                     }
                 } catch (err) {
-                    console.error("Error connecting to proxy:", err);
+                    logDebug("Token fetch failed", { error: err.message });
+                    showStatus("Error connecting to backend proxy. Check console or download debug log.", true);
+                    return false;
+                }
+            },
+
+            async fetchSpotify(url) {
+                if (!this.accessToken) {
+                    const ok = await this.initToken();
+                    if (!ok) return null;
+                }
+
+                logDebug(`Fetching Spotify URL: ${url}`);
+                try {
+                    let res = await fetch(url, {
+                        headers: { 'Authorization': `Bearer ${this.accessToken}` }
+                    });
+
+                    // Auto-refresh token if expired (401)
+                    if (res.status === 401) {
+                        logDebug("Token expired (401). Refreshing token and retrying...");
+                        const ok = await this.initToken();
+                        if (ok) {
+                            res = await fetch(url, {
+                                headers: { 'Authorization': `Bearer ${this.accessToken}` }
+                            });
+                        }
+                    }
+
+                    if (!res.ok) {
+                        const errBody = await res.text();
+                        logDebug(`Spotify API Error [${res.status}]:`, errBody);
+                        return null;
+                    }
+
+                    const data = await res.json();
+                    return data;
+                } catch (err) {
+                    logDebug("Network error while calling Spotify API", { error: err.message, url });
+                    return null;
                 }
             },
 
             async searchArtists(query) {
-                if (!this.accessToken) await this.initToken();
-                if (!this.accessToken) return [];
-
-                try {
-                    const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=artist&limit=5`, {
-                        headers: { 'Authorization': `Bearer ${this.accessToken}` }
-                    });
-                    const data = await res.json();
-                    return data.artists ? data.artists.items : [];
-                } catch (err) {
-                    console.error("Spotify Search Error:", err);
-                    return [];
-                }
+                const data = await this.fetchSpotify(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=artist&limit=5`);
+                return data?.artists?.items || [];
             },
 
             async getArtistAlbums(artistId) {
-                if (!this.accessToken) await this.initToken();
-                try {
-                    const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&market=US&limit=50`, {
-                        headers: { 'Authorization': `Bearer ${this.accessToken}` }
-                    });
-                    const data = await res.json();
-                    
-                    const seenNames = new Set();
-                    const uniqueAlbums = (data.items || []).filter(album => {
-                        const cleanName = album.name.toLowerCase().trim();
-                        if (seenNames.has(cleanName)) return false;
-                        seenNames.add(cleanName);
-                        return true;
-                    });
+                const data = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&limit=50`);
+                if (!data || !data.items) return [];
 
-                    return uniqueAlbums;
-                } catch (err) {
-                    console.error("Albums Fetch Error:", err);
-                    return [];
-                }
+                const seenNames = new Set();
+                return data.items.filter(album => {
+                    const cleanName = album.name.toLowerCase().trim();
+                    if (seenNames.has(cleanName)) return false;
+                    seenNames.add(cleanName);
+                    return true;
+                });
             },
 
             async getArtistTopTracks(artistId) {
-                if (!this.accessToken) await this.initToken();
-                try {
-                    const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`, {
-                        headers: { 'Authorization': `Bearer ${this.accessToken}` }
-                    });
-                    const data = await res.json();
-                    return (data.tracks || []).map(t => ({
-                        id: t.id,
-                        name: t.name,
-                        albumName: t.album?.name || 'Top Track',
-                        albumImg: t.album?.images?.[0]?.url || ''
-                    }));
-                } catch (err) {
-                    console.error("Top Tracks Fetch Error:", err);
-                    return [];
-                }
+                const data = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`);
+                if (!data || !data.tracks) return [];
+
+                return data.tracks.map(t => ({
+                    id: t.id,
+                    name: t.name,
+                    albumName: t.album?.name || 'Top Track',
+                    albumImg: t.album?.images?.[0]?.url || ''
+                }));
             },
 
             async getAlbumTracks(albumId, albumName, albumImg) {
-                if (!this.accessToken) await this.initToken();
-                try {
-                    const res = await fetch(`https://api.spotify.com/v1/albums/${albumId}/tracks?market=US&limit=50`, {
-                        headers: { 'Authorization': `Bearer ${this.accessToken}` }
-                    });
-                    const data = await res.json();
-                    return (data.items || []).map(t => ({
-                        id: t.id,
-                        name: t.name,
-                        albumName: albumName,
-                        albumImg: albumImg
-                    }));
-                } catch (err) {
-                    console.error("Tracks Fetch Error:", err);
-                    return [];
-                }
+                const data = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`);
+                if (!data || !data.items) return [];
+
+                return data.items.map(t => ({
+                    id: t.id,
+                    name: t.name,
+                    albumName: albumName,
+                    albumImg: albumImg
+                }));
             }
         };
 
@@ -249,6 +300,7 @@
 
         function showHome() {
             hideAllViews();
+            hideStatus();
             document.getElementById('view-home').classList.remove('hidden');
             document.getElementById('artistSearchInput').value = '';
         }
@@ -271,6 +323,7 @@
             }
 
             searchDebounceTimeout = setTimeout(async () => {
+                logDebug(`Searching artists for query: "${query}"`);
                 const artists = await spotifyClient.searchArtists(query);
                 renderSearchResults(artists);
             }, 300);
@@ -311,21 +364,28 @@
         }
 
         async function selectArtist(artist) {
+            hideStatus();
             currentArtist = artist;
+            logDebug(`Selected artist: ${artist.name} (ID: ${artist.id})`);
+
             document.getElementById('searchResults').classList.add('hidden');
             document.getElementById('artistSearchInput').value = artist.name;
 
             const imageUrl = artist.images && artist.images.length > 0 ? artist.images[0].url : 'https://via.placeholder.com/150';
             document.getElementById('artistBanner').innerHTML = `
-                <img src="${imageUrl}" class="w-28 h-28 rounded-full object-cover shadow-lg border-2 border-emerald-500/50"/>
-                <div class="text-center sm:text-left">
-                    <h2 class="text-3xl font-black text-white">${artist.name}</h2>
-                    <p class="text-sm text-slate-400 mt-1">${(artist.genres || []).join(', ') || 'Music Artist'}</p>
-                    <p class="text-xs text-emerald-400 font-semibold mt-2">${(artist.followers?.total || 0).toLocaleString()} Followers</p>
+                <div class="flex items-center gap-4">
+                    <img src="${imageUrl}" class="w-24 h-24 rounded-full object-cover shadow-lg border-2 border-emerald-500/50"/>
+                    <div>
+                        <h2 class="text-3xl font-black text-white">${artist.name}</h2>
+                        <p class="text-sm text-slate-400 mt-1">${(artist.genres || []).join(', ') || 'Music Artist'}</p>
+                        <p class="text-xs text-emerald-400 font-semibold mt-2">${(artist.followers?.total || 0).toLocaleString()} Followers</p>
+                    </div>
                 </div>
             `;
 
             artistAlbums = await spotifyClient.getArtistAlbums(artist.id);
+            logDebug(`Retrieved ${artistAlbums.length} albums for ${artist.name}`);
+
             renderArtistAlbums(artistAlbums);
             populateStatsDropdown(artistAlbums);
 
@@ -372,25 +432,27 @@
         }
 
         async function startEloRanking(mode, album = null) {
+            hideStatus();
             activeTracksPool = [];
             eloScores = {};
             roundCounter = 1;
 
+            showStatus("Loading tracks...", false);
+
             if (mode === 'album' && album) {
+                logDebug(`Loading tracks for album: ${album.name} (ID: ${album.id})`);
                 const imgUrl = album.images && album.images.length > 0 ? album.images[0].url : '';
                 activeTracksPool = await spotifyClient.getAlbumTracks(album.id, album.name, imgUrl);
             } else if (mode === 'all') {
-                // First get top tracks to guarantee tracks exist
+                logDebug(`Loading top tracks and discography for artist: ${currentArtist.name}`);
                 activeTracksPool = await spotifyClient.getArtistTopTracks(currentArtist.id);
 
-                // Fetch extra tracks from up to 5 albums
                 for (const alb of artistAlbums.slice(0, 5)) {
                     const imgUrl = alb.images && alb.images.length > 0 ? alb.images[0].url : '';
                     const tracks = await spotifyClient.getAlbumTracks(alb.id, alb.name, imgUrl);
                     activeTracksPool.push(...tracks);
                 }
 
-                // Remove duplicate track IDs
                 const seenIds = new Set();
                 activeTracksPool = activeTracksPool.filter(t => {
                     if (seenIds.has(t.id)) return false;
@@ -399,8 +461,11 @@
                 });
             }
 
+            hideStatus();
+            logDebug(`Total tracks loaded into pool: ${activeTracksPool.length}`);
+
             if (activeTracksPool.length < 2) {
-                alert("Not enough tracks found to start ranking for this selection.");
+                showStatus(`Could not find at least 2 tracks for this selection (found ${activeTracksPool.length}). Try downloading debug log for details.`, true);
                 return;
             }
 
@@ -500,6 +565,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            logDebug("SongSwipe initialized.");
             spotifyClient.initToken();
         });
     </script>
