@@ -226,7 +226,6 @@
                         headers: { 'Authorization': `Bearer ${this.accessToken}` }
                     });
 
-                    // Auto-refresh token if expired (401)
                     if (res.status === 401) {
                         logDebug("Token expired (401). Refreshing token and retrying...");
                         const ok = await this.initToken();
@@ -257,7 +256,8 @@
             },
 
             async getArtistAlbums(artistId) {
-                const data = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&limit=50`);
+                // FIXED: Added &market=US so Spotify accepts the limit parameter
+                const data = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&market=US&limit=50`);
                 if (!data || !data.items) return [];
 
                 const seenNames = new Set();
@@ -282,7 +282,7 @@
             },
 
             async getAlbumTracks(albumId, albumName, albumImg) {
-                const data = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`);
+                const data = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${albumId}/tracks?market=US&limit=50`);
                 if (!data || !data.items) return [];
 
                 return data.items.map(t => ({
@@ -293,7 +293,7 @@
                 }));
             }
         };
-
+        
         function hideAllViews() {
             document.querySelectorAll('.view-tab').forEach(el => el.classList.add('hidden'));
         }
