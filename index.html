@@ -78,13 +78,13 @@
                             <i class="fa-solid fa-list-ol"></i>
                         </div>
                         <div>
-                            <h4 class="font-bold text-lg text-white">All Discography Songs</h4>
-                            <p class="text-xs text-slate-400">Rank tracks across all albums head-to-head</p>
+                            <h4 class="font-bold text-lg text-white">Rank All Unique Studio Songs</h4>
+                            <p class="text-xs text-slate-400">Rank all core album tracks (excluding singles & instrumentals)</p>
                         </div>
                     </div>
                 </div>
 
-                <h4 class="text-lg font-bold pt-4">Or Select an Album:</h4>
+                <h4 class="text-lg font-bold pt-4">Studio Albums:</h4>
                 <div id="albumsList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     <!-- Dynamic albums rendered here -->
                 </div>
@@ -248,7 +248,6 @@
             },
 
             async getArtistAlbums(artistId) {
-                // Restricted to 'album' to target main studio albums and exclude singles/compilations
                 let url = `https://api.spotify.com/v1/artists/${artistId}/albums?market=US&include_groups=album`;
                 let allAlbums = [];
 
@@ -262,10 +261,9 @@
                 const seenNames = new Set();
                 return allAlbums.filter(album => {
                     const name = album.name.toLowerCase();
-                    
-                    // Filter out instrumental albums
-                    if (name.includes('instrumental')) return false;
-
+                    if (name.includes('live') || name.includes('greatest hits') || name.includes('instrumental') || name.includes('collection')) {
+                        return false;
+                    }
                     const cleanName = name.trim();
                     if (seenNames.has(cleanName)) return false;
                     seenNames.add(cleanName);
@@ -273,20 +271,75 @@
                 });
             },
 
+            async getAllUniqueArtistSongs(artistId) {
+                logDebug(`Fetching unique studio songs for artist ID: ${artistId}`);
+                if (artistAlbums.length === 0) {
+                    artistAlbums = await this.getArtistAlbums(artistId);
+                }
+
+                let allTracks = [];
+                for (const album of artistAlbums) {
+                    const imgUrl = album.images && album.images.length > 0 ? album.images[0].url : '';
+                    const data = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${album.id}/tracks?market=US&limit=50`);
+                    if (data && data.items) {
+                        for (const t of data.items) {
+                            allTracks.push({
+                                id: t.id,
+                                name: t.name,
+                                albumName: album.name,
+                                albumImg: imgUrl
+                            });
+                        }
+                    }
+                }
+
+                const uniqueSongsMap = new Map();
+                for (const track of allTracks) {
+                    const rawName = track.name.toLowerCase();
+
+                    // Exclude instrumentals, live tracks, covers, remixes
+                    if (rawName.includes('instrumental') || rawName.includes('live') || rawName.includes('cover') || rawName.includes('remix')) {
+                        continue;
+                    }
+
+                    // Normalize name to catch duplicates across deluxe/remaster versions
+                    let cleanName = rawName
+                        .replace(/\([^)]*remaster[^)]*\)/g, '')
+                        .replace(/\([^)]*deluxe[^)]*\)/g, '')
+                        .replace(/\[[^\]]*remaster[^\]]*\]/g, '')
+                        .trim();
+
+                    if (!uniqueSongsMap.has(cleanName)) {
+                        uniqueSongsMap.set(cleanName, track);
+                    } else {
+                        // Prefer shorter/cleaner album name versions (standard studio release)
+                        const existing = uniqueSongsMap.get(cleanName);
+                        if (track.albumName.length < existing.albumName.length) {
+                            uniqueSongsMap.set(cleanName, track);
+                        }
+                    }
+                }
+
+                const results = Array.from(uniqueSongsMap.values());
+                logDebug(`Extracted ${results.length} unique studio songs.`);
+                return results;
+            },
+
             async getAlbumTracks(albumId, albumName, albumImg) {
-                const params = new URLSearchParams({
-                    market: 'US',
-                    limit: '50'
-                });
-                const data = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${albumId}/tracks?${params.toString()}`);
+                const data = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${albumId}/tracks?market=US&limit=50`);
                 if (!data || !data.items) return [];
 
-                return data.items.map(t => ({
-                    id: t.id,
-                    name: t.name,
-                    albumName: albumName,
-                    albumImg: albumImg
-                }));
+                return data.items
+                    .filter(t => {
+                        const name = t.name.toLowerCase();
+                        return !name.includes('instrumental') && !name.includes('live') && !name.includes('cover');
+                    })
+                    .map(t => ({
+                        id: t.id,
+                        name: t.name,
+                        albumName: albumName,
+                        albumImg: albumImg
+                    }));
             }
         };
 
@@ -380,7 +433,7 @@
             `;
 
             artistAlbums = await spotifyClient.getArtistAlbums(artist.id);
-            logDebug(`Retrieved ${artistAlbums.length} albums for ${artist.name}`);
+            logDebug(`Retrieved ${artistAlbums.length} studio albums for ${artist.name}`);
 
             renderArtistAlbums(artistAlbums);
             populateStatsDropdown(artistAlbums);
@@ -394,7 +447,7 @@
             container.innerHTML = '';
 
             if (!albums || albums.length === 0) {
-                container.innerHTML = `<p class="text-sm text-slate-400 col-span-full">No albums found for this artist.</p>`;
+                container.innerHTML = `<p class="text-sm text-slate-400 col-span-full">No studio albums found for this artist.</p>`;
                 return;
             }
 
@@ -440,19 +493,8 @@
                 const imgUrl = album.images && album.images.length > 0 ? album.images[0].url : '';
                 activeTracksPool = await spotifyClient.getAlbumTracks(album.id, album.name, imgUrl);
             } else if (mode === 'all') {
-                logDebug(`Loading tracks across all albums for: ${currentArtist.name}`);
-                for (const alb of artistAlbums) {
-                    const imgUrl = alb.images && alb.images.length > 0 ? alb.images[0].url : '';
-                    const tracks = await spotifyClient.getAlbumTracks(alb.id, alb.name, imgUrl);
-                    activeTracksPool.push(...tracks);
-                }
-
-                const seenIds = new Set();
-                activeTracksPool = activeTracksPool.filter(t => {
-                    if (seenIds.has(t.id)) return false;
-                    seenIds.add(t.id);
-                    return true;
-                });
+                logDebug(`Loading all unique studio songs for: ${currentArtist.name}`);
+                activeTracksPool = await spotifyClient.getAllUniqueArtistSongs(currentArtist.id);
             }
 
             hideStatus();
