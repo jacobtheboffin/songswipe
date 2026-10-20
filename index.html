@@ -79,7 +79,7 @@
                         </div>
                         <div>
                             <h4 class="font-bold text-lg text-white">Rank All Unique Studio Songs</h4>
-                            <p class="text-xs text-slate-400">Rank unique core tracks (no duplicates, demos, live versions, or instrumentals)</p>
+                            <p class="text-xs text-slate-400">Rank unique core tracks (no duplicates, demos, acoustic, live versions, or instrumentals)</p>
                         </div>
                     </div>
                 </div>
@@ -306,9 +306,9 @@
                             }
 
                             let cleanName = rawName
-                                .replace(/\([^)]*(remaster\vert{}deluxe\vert{}bonus\vert{}version\vert{}edition\vert{}live\vert{}mix)[^)]*\)/g, '')
-                                .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix)[^\]]*\]/g, '')
-                                .replace(/-\s*(remastered|mono|stereo).*/g, '')
+                                .replace(/\([^)]*(remaster\vert{}deluxe\vert{}bonus\vert{}version\vert{}edition\vert{}live\vert{}mix\vert{}acoustic)[^)]*\)/g, '')
+                                .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic)[^\]]*\]/g, '')
+                                .replace(/-\s*(remastered|mono|stereo|acoustic).*/g, '')
                                 .trim();
 
                             const appearance = {
@@ -357,10 +357,16 @@
                     }
                 }
 
-                const contributedAlbumIds = new Set(finalUniqueSongs.map(s => s.albumId));
-                artistAlbums = validReleases.filter(rel => contributedAlbumIds.has(rel.id));
+                // Count unique songs contributed by each album/EP
+                const albumSongCounts = {};
+                for (const song of finalUniqueSongs) {
+                    albumSongCounts[song.albumId] = (albumSongCounts[song.albumId] || 0) + 1;
+                }
 
-                logDebug(`Extracted ${finalUniqueSongs.length} unique studio songs across ${artistAlbums.length} albums/EPs.`);
+                // Filter out albums that feature fewer than 2 unique songs
+                artistAlbums = validReleases.filter(rel => (albumSongCounts[rel.id] || 0) >= 2);
+
+                logDebug(`Extracted ${finalUniqueSongs.length} unique studio songs across ${artistAlbums.length} valid albums/EPs.`);
                 return finalUniqueSongs;
             },
 
@@ -371,7 +377,7 @@
                 return data.items
                     .filter(t => {
                         const name = t.name.toLowerCase();
-                        return !name.includes('instrumental') && !name.includes('live') && !name.includes('cover') && !name.includes('demo');
+                        return !name.includes('instrumental') && !name.includes('live') && !name.includes('cover') && !name.includes('demo') && !name.includes('acoustic');
                     })
                     .map(t => ({
                         id: t.id,
@@ -471,7 +477,6 @@
                 </div>
             `;
 
-            // First load unique songs which automatically populates and filters artistAlbums to relevant albums/EPs
             const uniqueSongs = await spotifyClient.getAllUniqueArtistSongs(artist.id);
 
             renderArtistAlbums(artistAlbums);
@@ -486,7 +491,7 @@
             container.innerHTML = '';
 
             if (!albums || albums.length === 0) {
-                container.innerHTML = `<p class="text-sm text-slate-400 col-span-full">No albums or EPs found for this artist.</p>`;
+                container.innerHTML = `<p class="text-sm text-slate-400 col-span-full">No valid albums or EPs found for this artist.</p>`;
                 return;
             }
 
