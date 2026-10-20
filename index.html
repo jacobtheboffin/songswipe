@@ -79,7 +79,7 @@
                         </div>
                         <div>
                             <h4 class="font-bold text-lg text-white">Rank All Unique Studio Songs</h4>
-                            <p class="text-xs text-slate-400">Rank all core album tracks (excluding singles & instrumentals)</p>
+                            <p class="text-xs text-slate-400">Rank unique core album tracks (no duplicates, demos, or instrumentals)</p>
                         </div>
                     </div>
                 </div>
@@ -261,7 +261,7 @@
                 const seenNames = new Set();
                 return allAlbums.filter(album => {
                     const name = album.name.toLowerCase();
-                    if (name.includes('live') || name.includes('greatest hits') || name.includes('instrumental') || name.includes('collection')) {
+                    if (name.includes('live') || name.includes('greatest hits') || name.includes('instrumental') || name.includes('collection') || name.includes('demo')) {
                         return false;
                     }
                     const cleanName = name.trim();
@@ -297,22 +297,28 @@
                 for (const track of allTracks) {
                     const rawName = track.name.toLowerCase();
 
-                    // Exclude instrumentals, live tracks, covers, remixes
-                    if (rawName.includes('instrumental') || rawName.includes('live') || rawName.includes('cover') || rawName.includes('remix')) {
+                    if (
+                        rawName.includes('instrumental') || 
+                        rawName.includes('live') || 
+                        rawName.includes('cover') || 
+                        rawName.includes('remix') || 
+                        rawName.includes('demo') ||
+                        rawName.includes('acoustic') ||
+                        rawName.includes('alternate take') ||
+                        rawName.includes('radio edit')
+                    ) {
                         continue;
                     }
 
-                    // Normalize name to catch duplicates across deluxe/remaster versions
                     let cleanName = rawName
-                        .replace(/\([^)]*remaster[^)]*\)/g, '')
-                        .replace(/\([^)]*deluxe[^)]*\)/g, '')
-                        .replace(/\[[^\]]*remaster[^\]]*\]/g, '')
+                        .replace(/\([^)]*(remaster\vert{}deluxe\vert{}bonus\vert{}version\vert{}edition)[^)]*\)/g, '')
+                        .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition)[^\]]*\]/g, '')
+                        .replace(/-\s*(remastered).*/g, '')
                         .trim();
 
                     if (!uniqueSongsMap.has(cleanName)) {
                         uniqueSongsMap.set(cleanName, track);
                     } else {
-                        // Prefer shorter/cleaner album name versions (standard studio release)
                         const existing = uniqueSongsMap.get(cleanName);
                         if (track.albumName.length < existing.albumName.length) {
                             uniqueSongsMap.set(cleanName, track);
@@ -332,7 +338,7 @@
                 return data.items
                     .filter(t => {
                         const name = t.name.toLowerCase();
-                        return !name.includes('instrumental') && !name.includes('live') && !name.includes('cover');
+                        return !name.includes('instrumental') && !name.includes('live') && !name.includes('cover') && !name.includes('demo');
                     })
                     .map(t => ({
                         id: t.id,
