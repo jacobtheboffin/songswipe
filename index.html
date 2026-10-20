@@ -248,7 +248,8 @@
             },
 
             async getArtistAlbums(artistId) {
-                let url = `https://api.spotify.com/v1/artists/${artistId}/albums?market=US&include_groups=album`;
+                // Include both albums and singles/EPs so EPs with unique songs are captured
+                let url = `https://api.spotify.com/v1/artists/${artistId}/albums?market=US&include_groups=album,single`;
                 let allAlbums = [];
 
                 while (url) {
@@ -258,17 +259,100 @@
                     url = data.next;
                 }
 
-                const seenNames = new Set();
+                const seenNormalizedNames = new Set();
                 return allAlbums.filter(album => {
                     const name = album.name.toLowerCase();
-                    if (name.includes('live') || name.includes('greatest hits') || name.includes('instrumental') || name.includes('collection') || name.includes('demo')) {
+
+                    // Exclude unwanted release categories
+                    if (
+                        name.includes('live') || 
+                        name.includes('greatest hits') || 
+                        name.includes('instrumental') || 
+                        name.includes('collection') || 
+                        name.includes('demo') ||
+                        name.includes('phoenix sessions')
+                    ) {
                         return false;
                     }
-                    const cleanName = name.trim();
-                    if (seenNames.has(cleanName)) return false;
-                    seenNames.add(cleanName);
+
+                    // Normalize album names to strip editions like "(Deluxe Edition)", "(Expanded Edition)", "Remastered"
+                    let cleanBaseName = name
+                        .replace(/\([^)]*(deluxe\vert{}expanded\vert{}remaster\vert{}bonus\vert{}edition\vert{}explicit)[^)]*\)/g, '')
+                        .replace(/\[[^\]]*(deluxe|expanded|remaster|bonus|edition|explicit)[^\]]*\]/g, '')
+                        .replace(/-\s*(deluxe|expanded|remaster).*/g, '')
+                        .trim();
+
+                    if (seenNormalizedNames.has(cleanBaseName)) return false;
+                    seenNormalizedNames.add(cleanBaseName);
                     return true;
                 });
+            },
+
+            async getAllUniqueArtistSongs(artistId) {
+                logDebug(`Fetching unique studio songs for artist ID: ${artistId}`);
+                if (artistAlbums.length === 0) {
+                    artistAlbums = await this.getArtistAlbums(artistId);
+                }
+
+                let allTracks = [];
+                for (const album of artistAlbums) {
+                    const imgUrl = album.images && album.images.length > 0 ? album.images[0].url : '';
+                    const data = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${album.id}/tracks?market=US&limit=50`);
+                    if (data && data.items) {
+                        for (const t of data.items) {
+                            allTracks.push({
+                                id: t.id,
+                                name: t.name,
+                                albumName: album.name,
+                                albumImg: imgUrl
+                            });
+                        }
+                    }
+                }
+
+                const uniqueSongsMap = new Map();
+                for (const track of allTracks) {
+                    const rawName = track.name.toLowerCase();
+
+                    if (
+                        rawName.includes('instrumental') || 
+                        rawName.includes('live') || 
+                        rawName.includes('cover') || 
+                        rawName.includes('remix') || 
+                        rawName.includes('demo') ||
+                        rawName.includes('acoustic') ||
+                        rawName.includes('alternate take') ||
+                        rawName.includes('radio edit')
+                    ) {
+                        continue;
+                    }
+
+                    // Strict normalization to collapse duplicates (e.g., "The Middle" vs "The Middle - Remastered")
+                    let cleanName = rawName
+                        .replace(/\([^)]*(remaster\vert{}deluxe\vert{}bonus\vert{}version\vert{}edition\vert{}live\vert{}mix)[^)]*\)/g, '')
+                        .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix)[^\]]*\]/g, '')
+                        .replace(/-\s*(remastered|mono|stereo).*/g, '')
+                        .trim();
+
+                    if (!uniqueSongsMap.has(cleanName)) {
+                        uniqueSongsMap.set(cleanName, track);
+                    } else {
+                        // Prefer standard studio album version over deluxe or expanded editions
+                        const existing = uniqueSongsMap.get(cleanName);
+                        const isCurrentDeluxe = track.albumName.toLowerCase().includes('deluxe') || track.albumName.toLowerCase().includes('expanded');
+                        const isExistingDeluxe = existing.albumName.toLowerCase().includes('deluxe') || existing.albumName.toLowerCase().includes('expanded');
+
+                        if (!isCurrentDeluxe && isExistingDeluxe) {
+                            uniqueSongsMap.set(cleanName, track);
+                        } else if (track.albumName.length < existing.albumName.length && !isCurrentDeluxe) {
+                            uniqueSongsMap.set(cleanName, track);
+                        }
+                    }
+                }
+
+                const results = Array.from(uniqueSongsMap.values());
+                logDebug(`Extracted ${results.length} unique studio songs.`);
+                return results;
             },
 
             async getAllUniqueArtistSongs(artistId) {
