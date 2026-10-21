@@ -250,6 +250,10 @@
             async getAllUniqueArtistSongs(artistId) {
                 logDebug(`Fetching all releases to build unique song pool for artist ID: ${artistId}`);
                 
+                // Get artist object to check official name for feature filtering
+                const artistData = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}`);
+                const artistNameLower = (artistData?.name || '').toLowerCase();
+
                 let url = `https://api.spotify.com/v1/artists/${artistId}/albums?market=US&include_groups=album,single`;
                 let allReleases = [];
 
@@ -260,110 +264,152 @@
                     url = data.next;
                 }
 
+                // Filter out live albums, greatest hits, instrumentals, demos, sessions
                 const validReleases = allReleases.filter(album => {
                     const name = album.name.toLowerCase();
-                    if (
+                    return !(
                         name.includes('live') || 
                         name.includes('greatest hits') || 
                         name.includes('instrumental') || 
                         name.includes('collection') || 
                         name.includes('demo') ||
-                        name.includes('phoenix sessions')
-                    ) {
-                        return false;
+                        name.includes('phoenix sessions') ||
+                        name.includes('spotify studios') ||
+                        name.includes('spotify sessions')
+                    );
+                });
+
+                // Helper to normalize album titles for Deluxe/Expanded edition collapsing
+                function getCleanAlbumBaseName(albumName) {
+                    return albumName.toLowerCase()
+                        .replace(/\([^)]*(deluxe\vert{}expanded\vert{}remaster\vert{}bonus\vert{}version\vert{}edition\vert{}explicit)[^)]*\)/g, '')
+                        .replace(/\[[^\]]*(deluxe|expanded|remaster|bonus|version|edition|explicit)[^\]]*\]/g, '')
+                        .replace(/-\s*(deluxe|expanded|remaster|edition).*/g, '')
+                        .trim();
+                }
+
+                // Separate into two buckets: Albums/EPs vs Singles
+                const albumsAndEPs = validReleases.filter(r => r.album_type === 'album' || r.album_type === 'compilation');
+                const singles = validReleases.filter(r => r.album_type === 'single');
+
+                // Sort chronologically
+                const sortByDate = (a, b) => new Date(a.release_date || '1900-01-01') - new Date(b.release_date || '1900-01-01');
+                albumsAndEPs.sort(sortByDate);
+                singles.sort(sortByDate);
+
+                const assignedSongsMap = new Map(); // cleanTrackName -> songObject
+
+                // PASS 1: Ingest Core Albums & EPs FIRST
+                for (const release of albumsAndEPs) {
+                    const imgUrl = release.images?.[0]?.url || '';
+                    const baseAlbumName = getCleanAlbumBaseName(release.name);
+                    const tData = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${release.id}/tracks?market=US&limit=50`);
+                    if (!tData || !tData.items) continue;
+
+                    for (const t of tData.items) {
+                        // Verify artist is credited and not just a guest feature
+                        const isMainArtist = t.artists.some(art => art.name.toLowerCase() === artistNameLower);
+                        if (!isMainArtist) continue;
+
+                        const rawName = t.name;
+                        const rawLower = rawName.toLowerCase();
+
+                        if (
+                            rawLower.includes('instrumental') || 
+                            rawLower.includes('live') || 
+                            rawLower.includes('cover') || 
+                            rawLower.includes('remix') || 
+                            rawLower.includes('demo') ||
+                            rawLower.includes('acoustic') ||
+                            rawLower.includes('alternate take') ||
+                            rawLower.includes('radio edit') ||
+                            rawLower.includes('edit') ||
+                            rawLower.includes('spotify sessions') ||
+                            rawLower.includes('recorded at')
+                        ) {
+                            continue;
+                        }
+
+                        let cleanName = rawLower
+                            .replace(/\([^)]*(remaster\vert{}deluxe\vert{}bonus\vert{}version\vert{}edition\vert{}live\vert{}mix\vert{}acoustic\vert{}edit)[^)]*\)/g, '')
+                            .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^\]]*\]/g, '')
+                            .replace(/-\s*(remastered|mono|stereo|acoustic|edit).*/g, '')
+                            .trim();
+
+                        if (!assignedSongsMap.has(cleanName)) {
+                            assignedSongsMap.set(cleanName, {
+                                id: t.id,
+                                name: t.name,
+                                albumName: release.name, // Keeps original display name (e.g. Deluxe title or standard)
+                                albumId: release.id,
+                                albumImg: imgUrl,
+                                releaseDate: release.release_date || '1900-01-01',
+                                baseAlbumName: baseAlbumName
+                            });
+                        }
                     }
-                    return true;
-                });
+                }
 
-                validReleases.sort((a, b) => {
-                    const dateA = new Date(a.release_date || '1900-01-01');
-                    const dateB = new Date(b.release_date || '1900-01-01');
-                    return dateA - dateB;
-                });
+                // PASS 2: Ingest Singles ONLY for songs not yet assigned to a core album/EP
+                for (const release of singles) {
+                    const imgUrl = release.images?.[0]?.url || '';
+                    const baseAlbumName = getCleanAlbumBaseName(release.name);
+                    const tData = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${release.id}/tracks?market=US&limit=50`);
+                    if (!tData || !tData.items) continue;
 
-                const songAppearancesMap = new Map();
+                    for (const t of tData.items) {
+                        const isMainArtist = t.artists.some(art => art.name.toLowerCase() === artistNameLower);
+                        if (!isMainArtist) continue;
 
-                for (const release of validReleases) {
-                    const imgUrl = release.images && release.images.length > 0 ? release.images[0].url : '';
-                    const data = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${release.id}/tracks?market=US&limit=50`);
-                    if (data && data.items) {
-                        const isPureSingle = (release.album_type === 'single' && data.items.length <= 2);
+                        const rawName = t.name;
+                        const rawLower = rawName.toLowerCase();
 
-                        for (const t of data.items) {
-                            const rawName = t.name.toLowerCase();
+                        if (
+                            rawLower.includes('instrumental') || 
+                            rawLower.includes('live') || 
+                            rawLower.includes('cover') || 
+                            rawLower.includes('remix') || 
+                            rawLower.includes('demo') ||
+                            rawLower.includes('acoustic') ||
+                            rawLower.includes('alternate take') ||
+                            rawLower.includes('radio edit') ||
+                            rawLower.includes('edit') ||
+                            rawLower.includes('spotify sessions') ||
+                            rawLower.includes('recorded at')
+                        ) {
+                            continue;
+                        }
 
-                            if (
-                                rawName.includes('instrumental') || 
-                                rawName.includes('live') || 
-                                rawName.includes('cover') || 
-                                rawName.includes('remix') || 
-                                rawName.includes('demo') ||
-                                rawName.includes('acoustic') ||
-                                rawName.includes('alternate take') ||
-                                rawName.includes('radio edit')
-                            ) {
-                                continue;
-                            }
+                        let cleanName = rawLower
+                            .replace(/\([^)]*(remaster\vert{}deluxe\vert{}bonus\vert{}version\vert{}edition\vert{}live\vert{}mix\vert{}acoustic\vert{}edit)[^)]*\)/g, '')
+                            .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^\]]*\]/g, '')
+                            .replace(/-\s*(remastered|mono|stereo|acoustic|edit).*/g, '')
+                            .trim();
 
-                            let cleanName = rawName
-                                .replace(/\([^)]*(remaster\vert{}deluxe\vert{}bonus\vert{}version\vert{}edition\vert{}live\vert{}mix\vert{}acoustic)[^)]*\)/g, '')
-                                .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic)[^\]]*\]/g, '')
-                                .replace(/-\s*(remastered|mono|stereo|acoustic).*/g, '')
-                                .trim();
-
-                            const appearance = {
+                        // Only add if not already assigned by a core album/EP
+                        if (!assignedSongsMap.has(cleanName)) {
+                            assignedSongsMap.set(cleanName, {
                                 id: t.id,
                                 name: t.name,
                                 albumName: release.name,
                                 albumId: release.id,
                                 albumImg: imgUrl,
                                 releaseDate: release.release_date || '1900-01-01',
-                                isPureSingle: isPureSingle
-                            };
-
-                            if (!songAppearancesMap.has(cleanName)) {
-                                songAppearancesMap.set(cleanName, []);
-                            }
-                            songAppearancesMap.get(cleanName).push(appearance);
+                                baseAlbumName: baseAlbumName
+                            });
                         }
                     }
                 }
 
-                const finalUniqueSongs = [];
+                const finalUniqueSongs = Array.from(assignedSongsMap.values());
 
-                for (const [cleanName, appearances] of songAppearancesMap.entries()) {
-                    appearances.sort((a, b) => new Date(a.releaseDate) - new Date(b.releaseDate));
-
-                    let selectedAppearance = null;
-                    for (const app of appearances) {
-                        if (!app.isPureSingle) {
-                            selectedAppearance = app;
-                            break;
-                        }
-                    }
-
-                    if (!selectedAppearance && appearances.length > 0) {
-                        selectedAppearance = appearances[0];
-                    }
-
-                    if (selectedAppearance) {
-                        finalUniqueSongs.push({
-                            id: selectedAppearance.id,
-                            name: selectedAppearance.name,
-                            albumName: selectedAppearance.albumName,
-                            albumId: selectedAppearance.albumId,
-                            albumImg: selectedAppearance.albumImg
-                        });
-                    }
-                }
-
-                // Count unique songs contributed by each album/EP
+                // Count unique songs contributed by each normalized album base name
                 const albumSongCounts = {};
                 for (const song of finalUniqueSongs) {
                     albumSongCounts[song.albumId] = (albumSongCounts[song.albumId] || 0) + 1;
                 }
 
-                // Filter out albums that feature fewer than 2 unique songs
+                // Filter valid albums/EPs to those with at least 2 unique songs
                 artistAlbums = validReleases.filter(rel => (albumSongCounts[rel.id] || 0) >= 2);
 
                 logDebug(`Extracted ${finalUniqueSongs.length} unique studio songs across ${artistAlbums.length} valid albums/EPs.`);
