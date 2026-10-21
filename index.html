@@ -7,20 +7,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @keyframes pulseBar {
+        @keyframes smoothShimmer {
             0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+            100% { transform: translateX(200%); }
         }
-        .animate-progress {
-            animation: pulseBar 1.5s infinite linear;
+        .animate-shimmer {
+            animation: smoothShimmer 2s infinite ease-in-out;
         }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
 
     <!-- Top Loading Bar -->
-    <div id="globalProgressBar" class="hidden fixed top-0 left-0 w-full h-1 bg-slate-800 z-50 overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-300 w-1/2 animate-progress"></div>
+    <div id="globalProgressBar" class="hidden fixed top-0 left-0 w-full h-1 bg-slate-900 z-50 overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-transparent via-emerald-400 to-transparent w-full animate-shimmer"></div>
     </div>
 
     <!-- Header / Navigation -->
@@ -48,11 +48,10 @@
                     type="text" 
                     id="artistSearchInput" 
                     placeholder="Search any artist (e.g., Radiohead, Sleep Token, Loathe)..." 
-                    class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-5 py-4 pl-12 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-2xl transition text-base"
+                    class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-5 py-4 pl-5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-2xl transition text-base"
                     oninput="handleSearchInput(event)"
                     onkeydown="handleSearchKeyDown(event)"
                 />
-                <i class="fa-solid fa-magnifying-glass absolute left-4.5 top-5 text-slate-500 text-lg"></i>
             </div>
             <div id="searchResults" class="hidden absolute left-0 right-0 max-w-2xl mx-auto top-16 bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden divide-y divide-slate-800/50"></div>
         </section>
@@ -294,8 +293,9 @@
                 return data?.artists?.items || [];
             },
 
-            async getAllUniqueArtistSongs(artistId) {
+            async getAllUniqueArtistSongs(artistId, onProgress) {
                 logDebug(`Fetching all releases to build unique song pool for artist ID: ${artistId}`);
+                if (onProgress) onProgress("Fetching artist profile & releases...");
                 
                 const artistData = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}`);
                 const artistNameLower = (artistData?.name || '').toLowerCase();
@@ -341,14 +341,21 @@
 
                 const assignedSongsMap = new Map();
 
-                // PASS 1: Albums & EPs First
-                for (const release of albumsAndEPs) {
-                    const imgUrl = release.images?.[0]?.url || '';
-                    const baseAlbumName = getCleanAlbumBaseName(release.name);
-                    const tData = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${release.id}/tracks?market=US&limit=50`);
-                    if (!tData || !tData.items) continue;
+                const fetchTracksBatch = async (releasesList) => {
+                    const promises = releasesList.map(async (release) => {
+                        const imgUrl = release.images?.[0]?.url || '';
+                        const baseAlbumName = getCleanAlbumBaseName(release.name);
+                        const tData = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${release.id}/tracks?market=US&limit=50`);
+                        return { release, imgUrl, baseAlbumName, tracks: tData?.items || [] };
+                    });
+                    return await Promise.all(promises);
+                };
 
-                    for (const t of tData.items) {
+                if (onProgress) onProgress(`Loading track lists across ${albumsAndEPs.length} albums/EPs...`);
+                const albumBatchResults = await fetchTracksBatch(albumsAndEPs);
+
+                for (const { release, imgUrl, baseAlbumName, tracks } of albumBatchResults) {
+                    for (const t of tracks) {
                         const isMainArtist = t.artists.some(art => art.name.toLowerCase() === artistNameLower);
                         if (!isMainArtist) continue;
 
@@ -391,14 +398,11 @@
                     }
                 }
 
-                // PASS 2: Standalone Singles
-                for (const release of singles) {
-                    const imgUrl = release.images?.[0]?.url || '';
-                    const baseAlbumName = getCleanAlbumBaseName(release.name);
-                    const tData = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${release.id}/tracks?market=US&limit=50`);
-                    if (!tData || !tData.items) continue;
+                if (onProgress && singles.length > 0) onProgress(`Loading track lists across ${singles.length} singles...`);
+                const singleBatchResults = singles.length > 0 ? await fetchTracksBatch(singles) : [];
 
-                    for (const t of tData.items) {
+                for (const { release, imgUrl, baseAlbumName, tracks } of singleBatchResults) {
+                    for (const t of tracks) {
                         const isMainArtist = t.artists.some(art => art.name.toLowerCase() === artistNameLower);
                         if (!isMainArtist) continue;
 
@@ -515,7 +519,7 @@
                 document.getElementById('searchResults').classList.add('hidden');
                 resetDiscographyState();
                 hideAllViews();
-                showGlobalLoading(true, `Searching discography for "${query}"...`);
+                showGlobalLoading(true, `Searching artists for "${query}"...`);
 
                 const artists = await spotifyClient.searchArtists(query);
                 if (artists && artists.length > 0) {
@@ -568,7 +572,7 @@
             document.getElementById('searchResults').classList.add('hidden');
             document.getElementById('artistSearchInput').value = artist.name;
 
-            showGlobalLoading(true, `Fetching discography for ${artist.name}...`);
+            showGlobalLoading(true, `Preparing discography for ${artist.name}...`);
             currentArtist = artist;
             logDebug(`Selected artist: ${artist.name} (ID: ${artist.id})`);
 
@@ -604,7 +608,9 @@
                 </div>
             `;
 
-            allUniqueSongs = await spotifyClient.getAllUniqueArtistSongs(artist.id);
+            allUniqueSongs = await spotifyClient.getAllUniqueArtistSongs(artist.id, (statusText) => {
+                showGlobalLoading(true, statusText);
+            });
 
             showGlobalLoading(false);
             renderArtistAlbums(artistAlbums);
@@ -651,7 +657,7 @@
                                 </div>
                             `).join('')}
                         </div>
-                        <button onclick="startEloRanking('album', '${album.id}')" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10">
+                        <button onclick="startEloRanking('album', '${album.id}')" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/15">
                             <i class="fa-solid fa-play"></i> Proceed to Swipe Album
                         </button>
                     </div>
@@ -665,7 +671,6 @@
             const arrow = document.getElementById(`accordion-arrow-${albumId}`);
             const isHidden = drawer.classList.contains('hidden');
 
-            // Close previously open accordion
             if (selectedAlbumAccordionId && selectedAlbumAccordionId !== albumId) {
                 const prevDrawer = document.getElementById(`accordion-drawer-${selectedAlbumAccordionId}`);
                 const prevArrow = document.getElementById(`accordion-arrow-${selectedAlbumAccordionId}`);
