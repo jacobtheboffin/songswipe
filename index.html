@@ -300,14 +300,16 @@
                 const artistData = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}`);
                 const artistNameLower = (artistData?.name || '').toLowerCase();
 
-                let url = `https://api.spotify.com/v1/artists/${artistId}/albums?market=US&include_groups=album,single`;
+                let url = `https://api.spotify.com/v1/artists/${artistId}/albums?market=US&include_groups=album,single&limit=50`;
                 let allReleases = [];
+                let pageCount = 0;
 
-                while (url) {
+                while (url && pageCount < 10) {
+                    pageCount++;
                     const data = await this.fetchSpotify(url);
                     if (!data || !data.items) break;
                     allReleases.push(...data.items);
-                    url = data.next;
+                    url = (data.next && data.next !== url) ? data.next : null;
                 }
 
                 const validReleases = allReleases.filter(album => {
@@ -351,98 +353,104 @@
                     return await Promise.all(promises);
                 };
 
-                if (onProgress) onProgress(`Loading track lists across ${albumsAndEPs.length} albums/EPs...`);
-                const albumBatchResults = await fetchTracksBatch(albumsAndEPs);
+                try {
+                    if (onProgress) onProgress(`Loading track lists across ${albumsAndEPs.length} albums/EPs...`);
+                    const albumBatchResults = await fetchTracksBatch(albumsAndEPs);
 
-                for (const { release, imgUrl, baseAlbumName, tracks } of albumBatchResults) {
-                    for (const t of tracks) {
-                        const isMainArtist = t.artists.some(art => art.name.toLowerCase() === artistNameLower);
-                        if (!isMainArtist) continue;
+                    for (const { release, imgUrl, baseAlbumName, tracks } of albumBatchResults) {
+                        for (const t of tracks) {
+                            if (!t || !t.artists) continue;
+                            const isMainArtist = t.artists.some(art => art.name.toLowerCase() === artistNameLower);
+                            if (!isMainArtist) continue;
 
-                        const rawName = t.name;
-                        const rawLower = rawName.toLowerCase();
+                            const rawName = t.name;
+                            const rawLower = rawName.toLowerCase();
 
-                        if (
-                            rawLower.includes('instrumental') || 
-                            rawLower.includes('live') || 
-                            rawLower.includes('cover') || 
-                            rawLower.includes('remix') || 
-                            rawLower.includes('demo') ||
-                            rawLower.includes('acoustic') ||
-                            rawLower.includes('alternate take') ||
-                            rawLower.includes('radio edit') ||
-                            rawLower.includes('edit') ||
-                            rawLower.includes('spotify sessions') ||
-                            rawLower.includes('recorded at')
-                        ) {
-                            continue;
-                        }
+                            if (
+                                rawLower.includes('instrumental') || 
+                                rawLower.includes('live') || 
+                                rawLower.includes('cover') || 
+                                rawLower.includes('remix') || 
+                                rawLower.includes('demo') ||
+                                rawLower.includes('acoustic') ||
+                                rawLower.includes('alternate take') ||
+                                rawLower.includes('radio edit') ||
+                                rawLower.includes('edit') ||
+                                rawLower.includes('spotify sessions') ||
+                                rawLower.includes('recorded at')
+                            ) {
+                                continue;
+                            }
 
-                        let cleanName = rawLower
-                            .replace(/\([^)]*(remaster\vert{}deluxe\vert{}bonus\vert{}version\vert{}edition\vert{}live\vert{}mix\vert{}acoustic\vert{}edit)[^)]*\)/g, '')
-                            .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^\]]*\]/g, '')
-                            .replace(/-\s*(remastered|mono|stereo|acoustic|edit).*/g, '')
-                            .trim();
+                            let cleanName = rawLower
+                                .replace(/\([^)]*(remaster\vert{}deluxe\vert{}bonus\vert{}version\vert{}edition\vert{}live\vert{}mix\vert{}acoustic\vert{}edit)[^)]*\)/g, '')
+                                .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^\]]*\]/g, '')
+                                .replace(/-\s*(remastered|mono|stereo|acoustic|edit).*/g, '')
+                                .trim();
 
-                        if (!assignedSongsMap.has(cleanName)) {
-                            assignedSongsMap.set(cleanName, {
-                                id: t.id,
-                                name: t.name,
-                                albumName: release.name,
-                                albumId: release.id,
-                                albumImg: imgUrl,
-                                releaseDate: release.release_date || '1900-01-01',
-                                baseAlbumName: baseAlbumName
-                            });
-                        }
-                    }
-                }
-
-                if (onProgress && singles.length > 0) onProgress(`Loading track lists across ${singles.length} singles...`);
-                const singleBatchResults = singles.length > 0 ? await fetchTracksBatch(singles) : [];
-
-                for (const { release, imgUrl, baseAlbumName, tracks } of singleBatchResults) {
-                    for (const t of tracks) {
-                        const isMainArtist = t.artists.some(art => art.name.toLowerCase() === artistNameLower);
-                        if (!isMainArtist) continue;
-
-                        const rawName = t.name;
-                        const rawLower = rawName.toLowerCase();
-
-                        if (
-                            rawLower.includes('instrumental') || 
-                            rawLower.includes('live') || 
-                            rawLower.includes('cover') || 
-                            rawLower.includes('remix') || 
-                            rawLower.includes('demo') ||
-                            rawLower.includes('acoustic') ||
-                            rawLower.includes('alternate take') ||
-                            rawLower.includes('radio edit') ||
-                            rawLower.includes('edit') ||
-                            rawLower.includes('spotify sessions') ||
-                            rawLower.includes('recorded at')
-                        ) {
-                            continue;
-                        }
-
-                        let cleanName = rawLower
-                            .replace(/\([^)]*(remaster\vert{}deluxe\vert{}bonus\vert{}version\vert{}edition\vert{}live\vert{}mix\vert{}acoustic\vert{}edit)[^)]*\)/g, '')
-                            .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^\]]*\]/g, '')
-                            .replace(/-\s*(remastered|mono|stereo|acoustic|edit).*/g, '')
-                            .trim();
-
-                        if (!assignedSongsMap.has(cleanName)) {
-                            assignedSongsMap.set(cleanName, {
-                                id: t.id,
-                                name: t.name,
-                                albumName: release.name,
-                                albumId: release.id,
-                                albumImg: imgUrl,
-                                releaseDate: release.release_date || '1900-01-01',
-                                baseAlbumName: baseAlbumName
-                            });
+                            if (!assignedSongsMap.has(cleanName)) {
+                                assignedSongsMap.set(cleanName, {
+                                    id: t.id,
+                                    name: t.name,
+                                    albumName: release.name,
+                                    albumId: release.id,
+                                    albumImg: imgUrl,
+                                    releaseDate: release.release_date || '1900-01-01',
+                                    baseAlbumName: baseAlbumName
+                                });
+                            }
                         }
                     }
+
+                    if (onProgress && singles.length > 0) onProgress(`Loading track lists across ${singles.length} singles...`);
+                    const singleBatchResults = singles.length > 0 ? await fetchTracksBatch(singles) : [];
+
+                    for (const { release, imgUrl, baseAlbumName, tracks } of singleBatchResults) {
+                        for (const t of tracks) {
+                            if (!t || !t.artists) continue;
+                            const isMainArtist = t.artists.some(art => art.name.toLowerCase() === artistNameLower);
+                            if (!isMainArtist) continue;
+
+                            const rawName = t.name;
+                            const rawLower = rawName.toLowerCase();
+
+                            if (
+                                rawLower.includes('instrumental') || 
+                                rawLower.includes('live') || 
+                                rawLower.includes('cover') || 
+                                rawLower.includes('remix') || 
+                                rawLower.includes('demo') ||
+                                rawLower.includes('acoustic') ||
+                                rawLower.includes('alternate take') ||
+                                rawLower.includes('radio edit') ||
+                                rawLower.includes('edit') ||
+                                rawLower.includes('spotify sessions') ||
+                                rawLower.includes('recorded at')
+                            ) {
+                                continue;
+                            }
+
+                            let cleanName = rawLower
+                                .replace(/\([^)]*(remaster\vert{}deluxe\vert{}bonus\vert{}version\vert{}edition\vert{}live\vert{}mix\vert{}acoustic\vert{}edit)[^)]*\)/g, '')
+                                .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^\]]*\]/g, '')
+                                .replace(/-\s*(remastered|mono|stereo|acoustic|edit).*/g, '')
+                                .trim();
+
+                            if (!assignedSongsMap.has(cleanName)) {
+                                assignedSongsMap.set(cleanName, {
+                                    id: t.id,
+                                    name: t.name,
+                                    albumName: release.name,
+                                    albumId: release.id,
+                                    albumImg: imgUrl,
+                                    releaseDate: release.release_date || '1900-01-01',
+                                    baseAlbumName: baseAlbumName
+                                });
+                            }
+                        }
+                    }
+                } catch (err) {
+                    logDebug("Error during track batch processing:", err.message);
                 }
 
                 const finalUniqueSongs = Array.from(assignedSongsMap.values());
