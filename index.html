@@ -27,7 +27,7 @@
     <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition" onclick="showHome()">
-                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-mono">v3.2 DB</span>
+                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-mono">v3.3 Storage</span>
             </h1>
             <nav class="flex gap-3 items-center">
                 <button onclick="downloadDebugLog()" class="text-xs bg-slate-800/80 hover:bg-slate-700/80 px-3 py-1.5 rounded-lg border border-slate-700/60 text-slate-300 transition flex items-center gap-1.5 font-medium">
@@ -184,7 +184,7 @@
     </main>
 
     <script>
-        const APP_VERSION = "v3.2 DB";
+        const APP_VERSION = "v3.3 Storage";
         const WORKER_TOKEN_URL = 'https://songswipe-api.songswipper.workers.dev/api/spotify-token';
 
         let debugLogs = [];
@@ -208,96 +208,32 @@
         }
 
         // ==========================================
-        // INDEXEDDB DATABASE CACHE LAYER (WITH TIMEOUT)
+        // SYNCHRONOUS LOCALSTORAGE CACHE LAYER (NON-BLOCKING)
         // ==========================================
-        const dbClient = {
-            dbName: 'SongSwipeDB',
-            dbVersion: 1,
-            db: null,
-            isAvailable: true,
-
-            async init() {
-                if (!this.isAvailable) return false;
-                return new Promise((resolve) => {
-                    const timer = setTimeout(() => {
-                        logDebug("IndexedDB init timed out after 2s. Disabling DB cache.");
-                        this.isAvailable = false;
-                        resolve(false);
-                    }, 2000);
-
-                    try {
-                        const request = indexedDB.open(this.dbName, this.dbVersion);
-
-                        request.onupgradeneeded = (e) => {
-                            const db = e.target.result;
-                            if (!db.objectStoreNames.contains('artists')) {
-                                db.createObjectStore('artists', { keyPath: 'artistId' });
-                            }
-                        };
-
-                        request.onsuccess = (e) => {
-                            clearTimeout(timer);
-                            this.db = e.target.result;
-                            logDebug("IndexedDB initialized successfully.");
-                            resolve(true);
-                        };
-
-                        request.onerror = (e) => {
-                            clearTimeout(timer);
-                            logDebug("IndexedDB initialization error:", e.target.error);
-                            this.isAvailable = false;
-                            resolve(false);
-                        };
-                    } catch (err) {
-                        clearTimeout(timer);
-                        logDebug("IndexedDB exception:", err.message);
-                        this.isAvailable = false;
-                        resolve(false);
-                    }
-                });
+        const storageClient = {
+            getArtist(artistId) {
+                try {
+                    const raw = localStorage.getItem(`songswipe_artist_${artistId}`);
+                    if (!raw) return null;
+                    const parsed = JSON.parse(raw);
+                    logDebug(`Loaded artist ${parsed.artistName} instantly from localStorage cache.`);
+                    return parsed;
+                } catch (err) {
+                    logDebug("localStorage read error:", err.message);
+                    return null;
+                }
             },
 
-            async getArtist(artistId) {
-                if (!this.isAvailable) return null;
-                if (!this.db) await this.init();
-                if (!this.db) return null;
-
-                return new Promise((resolve) => {
-                    const timer = setTimeout(() => resolve(null), 1500);
-                    try {
-                        const tx = this.db.transaction('artists', 'readonly');
-                        const store = tx.objectStore('artists');
-                        const req = store.get(artistId);
-
-                        req.onsuccess = () => { clearTimeout(timer); resolve(req.result || null); };
-                        req.onerror = () => { clearTimeout(timer); resolve(null); };
-                    } catch (err) {
-                        clearTimeout(timer);
-                        resolve(null);
-                    }
-                });
-            },
-
-            async saveArtist(artistId, artistName, albums, uniqueSongs) {
-                if (!this.isAvailable) return false;
-                if (!this.db) await this.init();
-                if (!this.db) return false;
-
-                return new Promise((resolve) => {
-                    const timer = setTimeout(() => resolve(false), 1500);
-                    try {
-                        const tx = this.db.transaction('artists', 'readwrite');
-                        const store = tx.objectStore('artists');
-                        const data = { artistId, artistName, albums, uniqueSongs, updatedAt: Date.now() };
-
-                        const req = store.put(data);
-                        req.onsuccess = () => { clearTimeout(timer); resolve(true); };
-                        req.onerror = () => { clearTimeout(timer); resolve(false); };
-                    } catch (err) {
-                        clearTimeout(timer);
-                        resolve(false);
-                    }
-                });
+            saveArtist(artistId, artistName, albums, uniqueSongs) {
+                try {
+                    const data = { artistId, artistName, albums, uniqueSongs, updatedAt: Date.now() };
+                    localStorage.setItem(`songswipe_artist_${artistId}`, JSON.stringify(data));
+                    logDebug(`Saved artist ${artistName} (${artistId}) to localStorage cache.`);
+                    return true;
+                } catch (err) {
+                    logDebug("localStorage save error (quota exceeded or restricted):", err.message);
+                    return false;
+                }
             }
         };
 
@@ -402,6 +338,9 @@
                 if (onProgress) onProgress("Fetching artist profile & releases...");
 
                 const artistData = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}`);
+                if (!artistData) {
+                    throw new Error("Failed to fetch artist profile from Spotify.");
+                }
                 const artistNameLower = (artistData?.name || '').toLowerCase();
 
                 let url = `https://api.spotify.com/v1/artists/${artistId}/albums?market=US&include_groups=album,single&limit=50`;
@@ -468,102 +407,98 @@
                     return results;
                 };
 
-                try {
-                    const albumBatchResults = await fetchTracksInChunks(albumsAndEPs, "Loading albums/EPs");
+                const albumBatchResults = await fetchTracksInChunks(albumsAndEPs, "Loading albums/EPs");
 
-                    for (const { release, imgUrl, baseAlbumName, tracks } of albumBatchResults) {
-                        for (const t of tracks) {
-                            if (!t || !t.artists) continue;
-                            const isMainArtist = t.artists.some(art => art.name.toLowerCase() === artistNameLower);
-                            if (!isMainArtist) continue;
+                for (const { release, imgUrl, baseAlbumName, tracks } of albumBatchResults) {
+                    for (const t of tracks) {
+                        if (!t || !t.artists) continue;
+                        const isMainArtist = t.artists.some(art => art.name.toLowerCase() === artistNameLower);
+                        if (!isMainArtist) continue;
 
-                            const rawName = t.name;
-                            const rawLower = rawName.toLowerCase();
+                        const rawName = t.name;
+                        const rawLower = rawName.toLowerCase();
 
-                            if (
-                                rawLower.includes('instrumental') || 
-                                rawLower.includes('live') || 
-                                rawLower.includes('cover') || 
-                                rawLower.includes('remix') || 
-                                rawLower.includes('demo') ||
-                                rawLower.includes('acoustic') ||
-                                rawLower.includes('alternate take') ||
-                                rawLower.includes('radio edit') ||
-                                rawLower.includes('edit') ||
-                                rawLower.includes('spotify sessions') ||
-                                rawLower.includes('recorded at')
-                            ) {
-                                continue;
-                            }
+                        if (
+                            rawLower.includes('instrumental') || 
+                            rawLower.includes('live') || 
+                            rawLower.includes('cover') || 
+                            rawLower.includes('remix') || 
+                            rawLower.includes('demo') ||
+                            rawLower.includes('acoustic') ||
+                            rawLower.includes('alternate take') ||
+                            rawLower.includes('radio edit') ||
+                            rawLower.includes('edit') ||
+                            rawLower.includes('spotify sessions') ||
+                            rawLower.includes('recorded at')
+                        ) {
+                            continue;
+                        }
 
-                            let cleanName = rawLower
-                                .replace(/\([^)]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^)]*\)/g, '')
-                                .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^\]]*\]/g, '')
-                                .replace(/-\s*(remastered|mono|stereo|acoustic|edit).*/g, '')
-                                .trim();
+                        let cleanName = rawLower
+                            .replace(/\([^)]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^)]*\)/g, '')
+                            .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^\]]*\]/g, '')
+                            .replace(/-\s*(remastered|mono|stereo|acoustic|edit).*/g, '')
+                            .trim();
 
-                            if (!assignedSongsMap.has(cleanName)) {
-                                assignedSongsMap.set(cleanName, {
-                                    id: t.id,
-                                    name: t.name,
-                                    albumName: release.name,
-                                    albumId: release.id,
-                                    albumImg: imgUrl,
-                                    releaseDate: release.release_date || '1900-01-01',
-                                    baseAlbumName: baseAlbumName
-                                });
-                            }
+                        if (!assignedSongsMap.has(cleanName)) {
+                            assignedSongsMap.set(cleanName, {
+                                id: t.id,
+                                name: t.name,
+                                albumName: release.name,
+                                albumId: release.id,
+                                albumImg: imgUrl,
+                                releaseDate: release.release_date || '1900-01-01',
+                                baseAlbumName: baseAlbumName
+                            });
                         }
                     }
+                }
 
-                    const singleBatchResults = singles.length > 0 ? await fetchTracksInChunks(singles, "Loading singles") : [];
+                const singleBatchResults = singles.length > 0 ? await fetchTracksInChunks(singles, "Loading singles") : [];
 
-                    for (const { release, imgUrl, baseAlbumName, tracks } of singleBatchResults) {
-                        for (const t of tracks) {
-                            if (!t || !t.artists) continue;
-                            const isMainArtist = t.artists.some(art => art.name.toLowerCase() === artistNameLower);
-                            if (!isMainArtist) continue;
+                for (const { release, imgUrl, baseAlbumName, tracks } of singleBatchResults) {
+                    for (const t of tracks) {
+                        if (!t || !t.artists) continue;
+                        const isMainArtist = t.artists.some(art => art.name.toLowerCase() === artistNameLower);
+                        if (!isMainArtist) continue;
 
-                            const rawName = t.name;
-                            const rawLower = rawName.toLowerCase();
+                        const rawName = t.name;
+                        const rawLower = rawName.toLowerCase();
 
-                            if (
-                                rawLower.includes('instrumental') || 
-                                rawLower.includes('live') || 
-                                rawLower.includes('cover') || 
-                                rawLower.includes('remix') || 
-                                rawLower.includes('demo') ||
-                                rawLower.includes('acoustic') ||
-                                rawLower.includes('alternate take') ||
-                                rawLower.includes('radio edit') ||
-                                rawLower.includes('edit') ||
-                                rawLower.includes('spotify sessions') ||
-                                rawLower.includes('recorded at')
-                            ) {
-                                continue;
-                            }
+                        if (
+                            rawLower.includes('instrumental') || 
+                            rawLower.includes('live') || 
+                            rawLower.includes('cover') || 
+                            rawLower.includes('remix') || 
+                            rawLower.includes('demo') ||
+                            rawLower.includes('acoustic') ||
+                            rawLower.includes('alternate take') ||
+                            rawLower.includes('radio edit') ||
+                            rawLower.includes('edit') ||
+                            rawLower.includes('spotify sessions') ||
+                            rawLower.includes('recorded at')
+                        ) {
+                            continue;
+                        }
 
-                            let cleanName = rawLower
-                                .replace(/\([^)]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^)]*\)/g, '')
-                                .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^\]]*\]/g, '')
-                                .replace(/-\s*(remastered|mono|stereo|acoustic|edit).*/g, '')
-                                .trim();
+                        let cleanName = rawLower
+                            .replace(/\([^)]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^)]*\)/g, '')
+                            .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^\]]*\]/g, '')
+                            .replace(/-\s*(remastered|mono|stereo|acoustic|edit).*/g, '')
+                            .trim();
 
-                            if (!assignedSongsMap.has(cleanName)) {
-                                assignedSongsMap.set(cleanName, {
-                                    id: t.id,
-                                    name: t.name,
-                                    albumName: release.name,
-                                    albumId: release.id,
-                                    albumImg: imgUrl,
-                                    releaseDate: release.release_date || '1900-01-01',
-                                    baseAlbumName: baseAlbumName
-                                });
-                            }
+                        if (!assignedSongsMap.has(cleanName)) {
+                            assignedSongsMap.set(cleanName, {
+                                id: t.id,
+                                name: t.name,
+                                albumName: release.name,
+                                albumId: release.id,
+                                albumImg: imgUrl,
+                                releaseDate: release.release_date || '1900-01-01',
+                                baseAlbumName: baseAlbumName
+                            });
                         }
                     }
-                } catch (err) {
-                    logDebug("Error during track batch processing:", err.message);
                 }
 
                 const finalUniqueSongs = Array.from(assignedSongsMap.values());
@@ -576,7 +511,7 @@
                 const filteredAlbums = validReleases.filter(rel => (albumSongCounts[rel.id] || 0) >= 2);
 
                 if (finalUniqueSongs.length > 0) {
-                    await dbClient.saveArtist(artistId, artistData?.name || '', filteredAlbums, finalUniqueSongs);
+                    storageClient.saveArtist(artistId, artistData?.name || '', filteredAlbums, finalUniqueSongs);
                 }
 
                 return { albums: filteredAlbums, uniqueSongs: finalUniqueSongs };
@@ -584,7 +519,7 @@
 
             async loadArtistDiscography(artistId, onProgress) {
                 if (onProgress) onProgress("Checking local ELO database...");
-                const cached = await dbClient.getArtist(artistId);
+                const cached = storageClient.getArtist(artistId);
 
                 if (cached && cached.uniqueSongs && cached.uniqueSongs.length > 0) {
                     logDebug(`Loaded ${cached.uniqueSongs.length} songs for ${cached.artistName} instantly from local Database!`);
@@ -626,15 +561,20 @@
         async function forceRefreshArtistData() {
             if (!currentArtist) return;
             showGlobalLoading(true, `Refreshing ${currentArtist.name} from Spotify...`);
-            const result = await spotifyClient.fetchAndBuildArtistSongsFromSpotify(currentArtist.id, (statusText) => {
-                showGlobalLoading(true, statusText);
-            });
-            artistAlbums = result.albums;
-            allUniqueSongs = result.uniqueSongs;
-            showGlobalLoading(false);
-            renderArtistAlbums(artistAlbums);
-            populateStatsDropdown(artistAlbums);
-            showStatus(`Refreshed ${allUniqueSongs.length} unique tracks from Spotify and updated local database!`);
+            try {
+                const result = await spotifyClient.fetchAndBuildArtistSongsFromSpotify(currentArtist.id, (statusText) => {
+                    showGlobalLoading(true, statusText);
+                });
+                artistAlbums = result.albums;
+                allUniqueSongs = result.uniqueSongs;
+                showGlobalLoading(false);
+                renderArtistAlbums(artistAlbums);
+                populateStatsDropdown(artistAlbums);
+                showStatus(`Refreshed ${allUniqueSongs.length} unique tracks from Spotify and updated local database!`);
+            } catch (err) {
+                showGlobalLoading(false);
+                showStatus(`Refresh failed: ${err.message}`, true);
+            }
         }
 
         function resetDiscographyState() {
@@ -785,13 +725,13 @@
             let isTimedOut = false;
             const watchdogTimer = setTimeout(() => {
                 isTimedOut = true;
-                logDebug(`Watchdog timeout triggered after 20s for artist ${artist.name}`);
+                logDebug(`Watchdog timeout triggered after 25s for artist ${artist.name}`);
                 showGlobalLoading(false);
                 showStatus(`Loading timed out or Spotify API was unreachable for ${artist.name}. Try selecting again or click Refresh.`, true);
                 if (allUniqueSongs.length === 0) {
                     showHome();
                 }
-            }, 20000);
+            }, 25000);
 
             try {
                 allUniqueSongs = await spotifyClient.loadArtistDiscography(artist.id, (statusText) => {
@@ -1023,9 +963,8 @@
             });
         }
 
-        window.addEventListener('DOMContentLoaded', async () => {
+        window.addEventListener('DOMContentLoaded', () => {
             logDebug(`SongSwipe initialized (${APP_VERSION}).`);
-            await dbClient.init();
             spotifyClient.initToken();
         });
     </script>
