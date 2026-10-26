@@ -27,7 +27,7 @@
     <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition" onclick="showHome()">
-                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-mono">v3.3 Storage</span>
+                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-mono">v3.4</span>
             </h1>
             <nav class="flex gap-3 items-center">
                 <button onclick="downloadDebugLog()" class="text-xs bg-slate-800/80 hover:bg-slate-700/80 px-3 py-1.5 rounded-lg border border-slate-700/60 text-slate-300 transition flex items-center gap-1.5 font-medium">
@@ -184,7 +184,7 @@
     </main>
 
     <script>
-        const APP_VERSION = "v3.3 Storage";
+        const APP_VERSION = "v3.4";
         const WORKER_TOKEN_URL = 'https://songswipe-api.songswipper.workers.dev/api/spotify-token';
 
         let debugLogs = [];
@@ -207,9 +207,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // ==========================================
-        // SYNCHRONOUS LOCALSTORAGE CACHE LAYER (NON-BLOCKING)
-        // ==========================================
         const storageClient = {
             getArtist(artistId) {
                 try {
@@ -231,7 +228,7 @@
                     logDebug(`Saved artist ${artistName} (${artistId}) to localStorage cache.`);
                     return true;
                 } catch (err) {
-                    logDebug("localStorage save error (quota exceeded or restricted):", err.message);
+                    logDebug("localStorage save error:", err.message);
                     return false;
                 }
             }
@@ -335,13 +332,16 @@
 
             async fetchAndBuildArtistSongsFromSpotify(artistId, onProgress) {
                 logDebug(`Fetching all releases from Spotify API for artist ID: ${artistId}`);
-                if (onProgress) onProgress("Fetching artist profile & releases...");
+                if (onProgress) onProgress("Fetching artist profile...");
 
                 const artistData = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}`);
                 if (!artistData) {
                     throw new Error("Failed to fetch artist profile from Spotify.");
                 }
-                const artistNameLower = (artistData?.name || '').toLowerCase();
+                const artistName = artistData?.name || '';
+                const artistNameLower = artistName.toLowerCase();
+
+                if (onProgress) onProgress(`Fetching releases for ${artistName}...`);
 
                 let url = `https://api.spotify.com/v1/artists/${artistId}/albums?market=US&include_groups=album,single&limit=50`;
                 let allReleases = [];
@@ -391,7 +391,7 @@
                     const chunkSize = 3;
                     for (let i = 0; i < releasesList.length; i += chunkSize) {
                         const chunk = releasesList.slice(i, i + chunkSize);
-                        if (onProgress) onProgress(`${label} (${i + 1}/${releasesList.length})...`);
+                        if (onProgress) onProgress(`${label} (${i + 1} to ${Math.min(i + chunkSize, releasesList.length)} of ${releasesList.length})...`);
                         
                         const promises = chunk.map(async (release) => {
                             const imgUrl = release.images?.[0]?.url || '';
@@ -402,17 +402,19 @@
 
                         const chunkResults = await Promise.all(promises);
                         results.push(...chunkResults);
-                        await new Promise(r => setTimeout(r, 80));
+                        await new Promise(r => setTimeout(r, 60));
                     }
                     return results;
                 };
 
-                const albumBatchResults = await fetchTracksInChunks(albumsAndEPs, "Loading albums/EPs");
+                const albumBatchResults = await fetchTracksInChunks(albumsAndEPs, "Loading Albums & EPs");
 
                 for (const { release, imgUrl, baseAlbumName, tracks } of albumBatchResults) {
                     for (const t of tracks) {
                         if (!t || !t.artists) continue;
-                        const isMainArtist = t.artists.some(art => art.name.toLowerCase() === artistNameLower);
+                        const isMainArtist = t.artists.some(art => 
+                            art.name.toLowerCase().includes(artistNameLower) || artistNameLower.includes(art.name.toLowerCase())
+                        );
                         if (!isMainArtist) continue;
 
                         const rawName = t.name;
@@ -454,12 +456,14 @@
                     }
                 }
 
-                const singleBatchResults = singles.length > 0 ? await fetchTracksInChunks(singles, "Loading singles") : [];
+                const singleBatchResults = singles.length > 0 ? await fetchTracksInChunks(singles, "Loading Singles") : [];
 
                 for (const { release, imgUrl, baseAlbumName, tracks } of singleBatchResults) {
                     for (const t of tracks) {
                         if (!t || !t.artists) continue;
-                        const isMainArtist = t.artists.some(art => art.name.toLowerCase() === artistNameLower);
+                        const isMainArtist = t.artists.some(art => 
+                            art.name.toLowerCase().includes(artistNameLower) || artistNameLower.includes(art.name.toLowerCase())
+                        );
                         if (!isMainArtist) continue;
 
                         const rawName = t.name;
@@ -511,18 +515,18 @@
                 const filteredAlbums = validReleases.filter(rel => (albumSongCounts[rel.id] || 0) >= 2);
 
                 if (finalUniqueSongs.length > 0) {
-                    storageClient.saveArtist(artistId, artistData?.name || '', filteredAlbums, finalUniqueSongs);
+                    storageClient.saveArtist(artistId, artistName, filteredAlbums, finalUniqueSongs);
                 }
 
                 return { albums: filteredAlbums, uniqueSongs: finalUniqueSongs };
             },
 
             async loadArtistDiscography(artistId, onProgress) {
-                if (onProgress) onProgress("Checking local ELO database...");
+                if (onProgress) onProgress("Checking local database...");
                 const cached = storageClient.getArtist(artistId);
 
                 if (cached && cached.uniqueSongs && cached.uniqueSongs.length > 0) {
-                    logDebug(`Loaded ${cached.uniqueSongs.length} songs for ${cached.artistName} instantly from local Database!`);
+                    logDebug(`Loaded ${cached.uniqueSongs.length} songs for ${cached.artistName} instantly from local storage cache.`);
                     artistAlbums = cached.albums;
                     allUniqueSongs = cached.uniqueSongs;
                     showStatus(`Loaded instantly from local database cache! (${cached.uniqueSongs.length} tracks)`, false);
@@ -725,13 +729,13 @@
             let isTimedOut = false;
             const watchdogTimer = setTimeout(() => {
                 isTimedOut = true;
-                logDebug(`Watchdog timeout triggered after 25s for artist ${artist.name}`);
+                logDebug(`Watchdog timeout triggered after 30s for artist ${artist.name}`);
                 showGlobalLoading(false);
-                showStatus(`Loading timed out or Spotify API was unreachable for ${artist.name}. Try selecting again or click Refresh.`, true);
+                showStatus(`Loading took longer than expected for ${artist.name}. Try selecting again or click Refresh.`, true);
                 if (allUniqueSongs.length === 0) {
                     showHome();
                 }
-            }, 25000);
+            }, 30000);
 
             try {
                 allUniqueSongs = await spotifyClient.loadArtistDiscography(artist.id, (statusText) => {
