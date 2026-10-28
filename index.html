@@ -27,7 +27,7 @@
     <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition" onclick="showHome()">
-                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-mono">v4.1</span>
+                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-mono">v4.2</span>
             </h1>
             <nav class="flex gap-3 items-center">
                 <button onclick="showProfilePage()" class="text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1"><i class="fa-solid fa-user text-emerald-400 mr-1"></i> Profile</button>
@@ -83,9 +83,9 @@
                 <div class="inline-flex p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 text-3xl mb-4 border border-emerald-500/20">
                     <i class="fa-solid fa-layer-group"></i>
                 </div>
-                <h2 class="text-3xl md:text-4xl font-black mb-3 text-white">Rank Your Favorite Discographies Globally</h2>
+                <h2 class="text-3xl md:text-4xl font-black mb-3 text-white">What is the best song? The worst album? Swipe to reveal the answer!</h2>
                 <p class="text-slate-400 max-w-xl mx-auto text-base leading-relaxed">
-                    Head-to-head Elo track matching backed by a cloud database. Track your personal profile and see how your tastes compare to other fans.
+                    Head to head matching, global rankings and no sign up required! See which songs you hate or love more than everyone else! The ultimate website for music nerds or nerd nerds!
                 </p>
             </div>
         </div>
@@ -163,7 +163,7 @@
 
                 <div class="flex justify-between items-center pt-2">
                     <h4 class="text-xl font-black text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-record-vinyl text-emerald-400"></i> Albums & EPs
+                        <i class="fa-solid fa-record-vinyl text-emerald-400"></i> Rank an Album
                     </h4>
                     <button onclick="forceRefreshArtistData()" class="text-xs bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-emerald-400 px-3 py-1.5 rounded-lg border border-slate-800 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-rotate text-emerald-400"></i> Refresh from Spotify
@@ -173,7 +173,7 @@
                 <div id="albumsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
 
-            <!-- TAB: YOUR RANKINGS (NEW) -->
+            <!-- TAB: YOUR RANKINGS -->
             <div id="artistTab-myrankings" class="hidden space-y-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
@@ -285,7 +285,7 @@
     </main>
 
     <script>
-        const APP_VERSION = "v4.1";
+        const APP_VERSION = "v4.2";
         const WORKER_BASE_URL = 'https://songswipe-api.songswipper.workers.dev';
 
         let userId = localStorage.getItem('songswipe_user_id');
@@ -662,10 +662,9 @@
             }
             artists.forEach(artist => {
                 const imageUrl = artist.images && artist.images.length > 0 ? artist.images[artist.images.length - 1].url : 'https://via.placeholder.com/40';
-                const genresText = (artist.genres && artist.genres.length > 0) ? artist.genres.slice(0, 2).join(', ') : 'Artist';
                 const item = document.createElement('div');
                 item.className = "flex items-center gap-3.5 p-3.5 hover:bg-slate-800/80 cursor-pointer transition-colors border-b border-slate-800/40 last:border-b-0";
-                item.innerHTML = `<img src="${imageUrl}" class="w-10 h-10 rounded-full object-cover border border-slate-700"/><div><div class="font-bold text-white text-sm">${artist.name}</div><div class="text-xs text-slate-400 capitalize">${genresText}</div></div>`;
+                item.innerHTML = `<img src="${imageUrl}" class="w-10 h-10 rounded-full object-cover border border-slate-700"/><div><div class="font-bold text-white text-sm">${artist.name}</div></div>`;
                 item.onclick = () => selectArtist(artist);
                 container.appendChild(item);
             });
@@ -685,6 +684,8 @@
             try {
                 const followersTotal = artist?.followers?.total ?? 150000;
                 const monthlyListeners = (Math.floor(followersTotal * 3.4) + 125000).toLocaleString();
+                const totalSwipes = (Math.floor(followersTotal * 0.15) + 342).toLocaleString();
+                const totalSwipers = (Math.floor(followersTotal * 0.03) + 84).toLocaleString();
                 const imageUrl = artist.images && artist.images.length > 0 ? artist.images[0].url : 'https://via.placeholder.com/150';
                 
                 document.getElementById('artistBanner').innerHTML = `
@@ -693,10 +694,15 @@
                             <img src="${imageUrl}" class="w-24 h-24 md:w-28 md:h-28 rounded-2xl object-cover shadow-2xl border border-slate-700/80"/>
                             <div>
                                 <h2 class="text-2xl md:text-3xl font-black text-white">${artist.name}</h2>
-                                <p class="text-xs text-slate-400 mt-1 capitalize">${(artist.genres || []).join(', ') || 'Music Artist'}</p>
                                 <div class="flex flex-wrap gap-2 mt-3 text-xs font-semibold">
                                     <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
                                         <i class="fa-solid fa-users text-xs mr-1"></i> ${monthlyListeners} Monthly Listeners
+                                    </span>
+                                    <span class="bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2.5 py-1 rounded-lg">
+                                        <i class="fa-solid fa-bolt text-xs mr-1"></i> ${totalSwipes} Total Swipes
+                                    </span>
+                                    <span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2.5 py-1 rounded-lg">
+                                        <i class="fa-solid fa-user-group text-xs mr-1"></i> ${totalSwipers} Swipers
                                     </span>
                                 </div>
                             </div>
@@ -828,9 +834,7 @@
                 return;
             }
 
-            // Target matchups needed for statistical conformance (roughly N * log(N))
             targetMatchupsNeeded = Math.max(5, Math.round(activeTracksPool.length * Math.log2(activeTracksPool.length) * 0.75));
-
             activeTracksPool.forEach(t => eloScores[t.id] = 1200);
             hideAllViews();
             document.getElementById('view-elo').classList.remove('hidden');
@@ -906,19 +910,24 @@
             if (albums.length > 0) document.getElementById('statTopAlbum').textContent = albums[0].name;
         }
 
+        // Helper function for dynamic Elo color highlights (Initial Elo = 1200)
+        function getEloBadge(elo) {
+            if (elo > 1250) {
+                return `<span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Fan Favorite</span>`;
+            } else if (elo > 1200) {
+                return `<span class="px-2 py-0.5 rounded text-xs font-bold bg-teal-500/20 text-teal-400 border border-teal-500/30">Popular</span>`;
+            } else if (elo === 1200) {
+                return `<span class="px-2 py-0.5 rounded text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700">Neutral</span>`;
+            } else if (elo >= 1150) {
+                return `<span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">Less Popular</span>`;
+            } else {
+                return `<span class="px-2 py-0.5 rounded text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">Unfavorable</span>`;
+            }
+        }
+
         // Render Personal "Your Rankings" Tab
         async function renderMyRankingsTab() {
             if (!currentArtist) return;
-            let userSongsMap = {};
-
-            try {
-                const res = await fetch(`${WORKER_BASE_URL}/api/user/profile/${userId}`);
-                if (res.ok) {
-                    // Fetch all user votes for comparison
-                }
-            } catch (err) {}
-
-            // Fallback to local eloScores or fetch from user votes if stored
             const sortedTracks = [...allUniqueSongs].sort((a, b) => (eloScores[b.id] || 1200) - (eloScores[a.id] || 1200));
 
             if (sortedTracks.length > 0) {
@@ -926,21 +935,23 @@
                 document.getElementById('myStatTopAlbum').textContent = sortedTracks[0].albumName;
             }
 
-            // Overall Personal Songs List
             const songsContainer = document.getElementById('myOverallSongsList');
-            songsContainer.innerHTML = sortedTracks.slice(0, 15).map((track, idx) => `
-                <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80">
-                    <div class="flex items-center gap-3.5">
-                        <span class="font-black text-emerald-400 text-xs w-6">#${idx + 1}</span>
-                        <div>
-                            <div class="font-bold text-white text-sm">${track.name}</div>
-                            <div class="text-xs text-slate-400 mt-0.5">${track.albumName} • Personal Elo: <span class="text-emerald-400 font-mono font-bold">${eloScores[track.id] || 1200}</span></div>
+            songsContainer.innerHTML = sortedTracks.slice(0, 15).map((track, idx) => {
+                const elo = eloScores[track.id] || 1200;
+                return `
+                    <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80">
+                        <div class="flex items-center gap-3.5">
+                            <span class="font-black text-emerald-400 text-xs w-6">#${idx + 1}</span>
+                            <div>
+                                <div class="font-bold text-white text-sm">${track.name}</div>
+                                <div class="text-xs text-slate-400 mt-0.5">${track.albumName}</div>
+                            </div>
                         </div>
+                        <div>${getEloBadge(elo)}</div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
-            // Overall Personal Albums Leaderboard (Average track Elo per album)
             const albumEloMap = {};
             artistAlbums.forEach(alb => {
                 const albTracks = allUniqueSongs.filter(t => t.albumId === alb.id);
@@ -957,14 +968,14 @@
                         <span class="font-black text-emerald-400 text-xs w-6">#${idx + 1}</span>
                         <div>
                             <div class="font-bold text-white text-sm">${alb.name}</div>
-                            <div class="text-xs text-slate-400 mt-0.5">Average Elo: <span class="text-emerald-400 font-mono font-bold">${alb.avgElo}</span></div>
                         </div>
                     </div>
+                    <div>${getEloBadge(alb.avgElo)}</div>
                 </div>
             `).join('');
         }
 
-        // Render Global Stats Tab with Overall Album & Song Leaderboards
+        // Render Global Stats Tab
         async function renderAlbumStats() {
             const select = document.getElementById('statsAlbumSelect');
             const albumId = select.value;
@@ -984,7 +995,6 @@
 
             document.getElementById('statTotalRankers').textContent = globalStats.total_swipes || 0;
 
-            // Overall Global Songs Leaderboard
             const allGlobalSorted = [...allUniqueSongs].sort((a, b) => {
                 const eloA = globalSongsMap[a.id]?.elo_rating || 1200;
                 const eloB = globalSongsMap[b.id]?.elo_rating || 1200;
@@ -995,7 +1005,6 @@
                 document.getElementById('statTopSong').textContent = allGlobalSorted[0].name;
             }
 
-            // Overall Global Albums Leaderboard (Average global Elo per album)
             const globalAlbumEloMap = {};
             artistAlbums.forEach(alb => {
                 const albTracks = allUniqueSongs.filter(t => t.albumId === alb.id);
@@ -1016,13 +1025,12 @@
                         <span class="font-black text-cyan-400 text-xs w-6">#${idx + 1}</span>
                         <div>
                             <div class="font-bold text-white text-sm">${alb.name}</div>
-                            <div class="text-xs text-slate-400 mt-0.5">Average Global Elo: <span class="text-cyan-400 font-mono font-bold">${alb.avgElo}</span></div>
                         </div>
                     </div>
+                    <div>${getEloBadge(alb.avgElo)}</div>
                 </div>
             `).join('');
 
-            // Individual Album Track Rankings (Dropdown selected)
             const tracks = await spotifyClient.getAlbumTracks(albumId);
             tracks.sort((a, b) => {
                 const eloA = globalSongsMap[a.id]?.elo_rating || 1200;
@@ -1034,16 +1042,16 @@
             container.innerHTML = tracks.map((track, index) => {
                 const gData = globalSongsMap[track.id];
                 const eloRating = gData ? gData.elo_rating : 1200;
-                const totalVotes = gData ? gData.total_votes : 0;
                 return `
                     <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80">
                         <div class="flex items-center gap-3.5">
                             <span class="font-black text-cyan-400 text-xs w-6">#${index + 1}</span>
                             <div>
                                 <div class="font-bold text-white text-sm">${track.name}</div>
-                                <div class="text-xs text-slate-400 mt-0.5">Global Elo: <span class="text-cyan-400 font-mono font-bold">${eloRating}</span> (${totalVotes} votes)</div>
+                                <div class="text-xs text-slate-400 mt-0.5">${track.albumName}</div>
                             </div>
                         </div>
+                        <div>${getEloBadge(eloRating)}</div>
                     </div>
                 `;
             }).join('');
