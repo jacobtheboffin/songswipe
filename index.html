@@ -27,7 +27,7 @@
     <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition" onclick="showHome()">
-                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-mono">v4.0</span>
+                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-mono">v4.1</span>
             </h1>
             <nav class="flex gap-3 items-center">
                 <button onclick="showProfilePage()" class="text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1"><i class="fa-solid fa-user text-emerald-400 mr-1"></i> Profile</button>
@@ -63,7 +63,7 @@
             <span id="loaderBannerText">Loading discography data...</span>
         </div>
 
-        <!-- On-Screen Status & Warning Banner -->
+        <!-- On-Screen Status Banner -->
         <div id="statusBanner" class="hidden mb-8 p-4 rounded-2xl text-sm font-medium flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
             <span id="statusBannerText"></span>
             <div class="flex items-center gap-2">
@@ -113,15 +113,12 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <!-- Love More Than Other Fans -->
                 <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
                     <h4 class="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
                         <i class="fa-solid fa-heart"></i> You Love More Than Other Fans
                     </h4>
                     <div id="profileLoveMore" class="text-slate-400 text-sm italic">Complete more matchups to compare tastes!</div>
                 </div>
-
-                <!-- Hate More Than Other Fans -->
                 <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
                     <h4 class="text-sm font-bold text-red-400 uppercase tracking-wider flex items-center gap-2">
                         <i class="fa-solid fa-heart-crack"></i> You Hate More Than Other Fans
@@ -142,11 +139,14 @@
         <div id="view-artist" class="view-tab hidden space-y-8">
             <div id="artistBanner" class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-950 p-6 md:p-8 rounded-3xl border border-slate-800/80 shadow-2xl"></div>
 
-            <div class="flex border-b border-slate-800 gap-6 text-base font-bold">
-                <button id="tabBtnRank" onclick="switchArtistTab('rank')" class="pb-3 border-b-2 border-emerald-400 text-emerald-400 transition">Discography & Ranking</button>
-                <button id="tabBtnStats" onclick="switchArtistTab('stats')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">Global Leaderboards & Stats</button>
+            <!-- Artist Sub-Navigation Tabs -->
+            <div class="flex border-b border-slate-800 gap-6 text-base font-bold overflow-x-auto">
+                <button id="tabBtnRank" onclick="switchArtistTab('rank')" class="pb-3 border-b-2 border-emerald-400 text-emerald-400 transition whitespace-nowrap">Discography & Ranking</button>
+                <button id="tabBtnMyRankings" onclick="switchArtistTab('myrankings')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Your Rankings</button>
+                <button id="tabBtnStats" onclick="switchArtistTab('stats')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Global Leaderboards & Stats</button>
             </div>
 
+            <!-- TAB: RANK OPTIONS -->
             <div id="artistTab-rank" class="space-y-6">
                 <div onclick="startEloRanking('all')" class="bg-gradient-to-r from-slate-900 to-slate-850 p-6 rounded-2xl border border-slate-800 hover:border-emerald-500/60 cursor-pointer transition transform hover:-translate-y-0.5 shadow-xl flex items-center justify-between group">
                     <div class="flex items-center gap-5">
@@ -173,6 +173,41 @@
                 <div id="albumsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
 
+            <!-- TAB: YOUR RANKINGS (NEW) -->
+            <div id="artistTab-myrankings" class="hidden space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
+                        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Your Top Ranked Album</div>
+                        <div id="myStatTopAlbum" class="text-base font-bold text-white truncate">-</div>
+                    </div>
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
+                        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Your Top Ranked Song</div>
+                        <div id="myStatTopSong" class="text-base font-bold text-white truncate">-</div>
+                    </div>
+                </div>
+
+                <!-- Overall Album Ranking Leaderboard (Personal) -->
+                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
+                    <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-ranking-star text-emerald-400"></i> Overall Album Rankings (Your Tastes)
+                    </h4>
+                    <div id="myOverallAlbumsList" class="space-y-2">
+                        <p class="text-sm text-slate-400">Complete matchups to rank albums.</p>
+                    </div>
+                </div>
+
+                <!-- Overall Song Ranking Leaderboard (Personal) -->
+                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
+                    <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-music text-emerald-400"></i> Overall Song Rankings (Your Tastes)
+                    </h4>
+                    <div id="myOverallSongsList" class="space-y-2">
+                        <p class="text-sm text-slate-400">No personal song rankings recorded yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: GLOBAL STATS -->
             <div id="artistTab-stats" class="hidden space-y-6">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
@@ -180,7 +215,7 @@
                         <div id="statTotalRankers" class="text-2xl font-black text-emerald-400">0</div>
                     </div>
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
-                        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Top Rated Album</div>
+                        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Global Top Album</div>
                         <div id="statTopAlbum" class="text-base font-bold text-white truncate">-</div>
                     </div>
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
@@ -189,8 +224,21 @@
                     </div>
                 </div>
 
+                <!-- Overall Album Ranking Leaderboard (Global) -->
                 <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-                    <h4 class="text-lg font-bold text-white">Global Album Track Rankings (D1 Cloud Database)</h4>
+                    <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-globe text-cyan-400"></i> Overall Album Rankings (Community)
+                    </h4>
+                    <div id="globalOverallAlbumsList" class="space-y-2">
+                        <p class="text-sm text-slate-400">Loading global community data...</p>
+                    </div>
+                </div>
+
+                <!-- Overall Song Ranking Leaderboard (Global) -->
+                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
+                    <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-list-ol text-cyan-400"></i> Overall Song Rankings (Community)
+                    </h4>
                     <select id="statsAlbumSelect" onchange="renderAlbumStats()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-200 focus:outline-none focus:border-emerald-500 text-sm"></select>
                     <div id="albumTrackRankings" class="space-y-2 pt-2"></div>
                 </div>
@@ -204,6 +252,17 @@
                     <i class="fa-solid fa-arrow-left"></i> Back to Artist Page
                 </button>
                 <span id="matchupCount" class="text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-full">Matchup 1</span>
+            </div>
+
+            <!-- Conformance Progress Bar -->
+            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-2 shadow-lg">
+                <div class="flex justify-between items-center text-xs font-semibold">
+                    <span class="text-slate-400 uppercase tracking-wider">Ranking Conformance Progress</span>
+                    <span id="progressPercentage" class="text-emerald-400 font-mono">0%</span>
+                </div>
+                <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
+                    <div id="conformanceProgressBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
             </div>
 
             <h2 class="text-2xl font-black text-center text-white">Which track is better?</h2>
@@ -226,10 +285,9 @@
     </main>
 
     <script>
-        const APP_VERSION = "v4.0";
+        const APP_VERSION = "v4.1";
         const WORKER_BASE_URL = 'https://songswipe-api.songswipper.workers.dev';
 
-        // Initialize persistent user ID stored in localStorage
         let userId = localStorage.getItem('songswipe_user_id');
         if (!userId) {
             userId = 'user_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -261,11 +319,8 @@
                 try {
                     const raw = localStorage.getItem(`songswipe_artist_${artistId}`);
                     if (!raw) return null;
-                    const parsed = JSON.parse(raw);
-                    logDebug(`Loaded artist ${parsed.artistName} instantly from localStorage cache.`);
-                    return parsed;
+                    return JSON.parse(raw);
                 } catch (err) {
-                    logDebug("localStorage read error:", err.message);
                     return null;
                 }
             },
@@ -273,10 +328,8 @@
                 try {
                     const data = { artistId, artistName, albums, uniqueSongs, updatedAt: Date.now() };
                     localStorage.setItem(`songswipe_artist_${artistId}`, JSON.stringify(data));
-                    logDebug(`Saved artist ${artistName} (${artistId}) to localStorage cache.`);
                     return true;
                 } catch (err) {
-                    logDebug("localStorage save error:", err.message);
                     return false;
                 }
             }
@@ -301,13 +354,10 @@
             const banner = document.getElementById('statusBanner');
             const textEl = document.getElementById('statusBannerText');
             const actionBtn = document.getElementById('statusActionBtn');
-
             textEl.textContent = message;
             banner.className = `mb-8 p-4 rounded-2xl text-sm font-medium flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg ${isError ? 'bg-red-500/10 border border-red-500/30 text-red-400' : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'}`;
-            
             if (showRefresh) actionBtn.classList.remove('hidden');
             else actionBtn.classList.add('hidden');
-
             banner.classList.remove('hidden');
         }
 
@@ -322,24 +372,22 @@
         let currentMatchup = [];
         let eloScores = {};
         let roundCounter = 1;
+        let targetMatchupsNeeded = 1;
         let selectedAlbumAccordionId = null;
 
         const spotifyClient = {
             accessToken: null,
             async initToken() {
-                logDebug("Requesting new Spotify Access Token from Worker...");
                 try {
                     const response = await fetchWithTimeout(`${WORKER_BASE_URL}/api/spotify-token`, {}, 8000);
-                    if (!response || !response.ok) throw new Error(`Worker status ${response?.status || 'Failed'}`);
+                    if (!response || !response.ok) return false;
                     const data = await response.json();
                     if (data.access_token) {
                         this.accessToken = data.access_token;
-                        logDebug("Token obtained successfully.");
                         return true;
                     }
                     return false;
                 } catch (err) {
-                    logDebug("Token fetch failed", { error: err.message });
                     return false;
                 }
             },
@@ -348,30 +396,15 @@
                     const ok = await this.initToken();
                     if (!ok) return null;
                 }
-                logDebug(`Fetching Spotify URL: ${url}`);
                 try {
-                    let res = await fetchWithTimeout(url, {
-                        headers: { 'Authorization': `Bearer ${this.accessToken}` }
-                    }, 8000);
-
+                    let res = await fetchWithTimeout(url, { headers: { 'Authorization': `Bearer ${this.accessToken}` } }, 8000);
                     if (res && res.status === 401) {
                         const ok = await this.initToken();
-                        if (ok) {
-                            res = await fetchWithTimeout(url, {
-                                headers: { 'Authorization': `Bearer ${this.accessToken}` }
-                            }, 8000);
-                        }
+                        if (ok) res = await fetchWithTimeout(url, { headers: { 'Authorization': `Bearer ${this.accessToken}` } }, 8000);
                     }
-
-                    if (!res || !res.ok) {
-                        const errText = res ? await res.text() : 'Timeout / Network Error';
-                        logDebug(`Spotify API Call failed [${res?.status || 'ERR'}]:`, errText);
-                        return null;
-                    }
-
+                    if (!res || !res.ok) return null;
                     return await res.json();
                 } catch (err) {
-                    logDebug("Network error in fetchSpotify", { error: err.message, url });
                     return null;
                 }
             },
@@ -380,17 +413,13 @@
                 return data?.artists?.items || [];
             },
             async fetchAndBuildArtistSongsFromSpotify(artistId, onProgress) {
-                logDebug(`[Step 1] Fetching releases from Spotify API for artist ID: ${artistId}`);
                 if (onProgress) onProgress("Fetching artist profile...");
-
                 const artistData = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}`);
                 if (!artistData) throw new Error("Failed to fetch artist profile from Spotify.");
                 const artistName = artistData?.name || '';
                 const artistNameLower = artistName.toLowerCase();
-                logDebug(`[Step 2] Artist profile obtained: ${artistName}`);
 
                 if (onProgress) onProgress(`Fetching releases for ${artistName}...`);
-
                 let url = `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single`;
                 let allReleases = [];
                 let pageCount = 0;
@@ -405,48 +434,32 @@
 
                 const validReleases = allReleases.filter(album => {
                     const name = album.name.toLowerCase();
-                    return !(
-                        name.includes('live') || name.includes('greatest hits') || 
-                        name.includes('instrumental') || name.includes('collection') || 
-                        name.includes('demo') || name.includes('phoenix sessions') ||
-                        name.includes('spotify studios') || name.includes('spotify sessions')
-                    );
+                    return !(name.includes('live') || name.includes('greatest hits') || name.includes('instrumental') || name.includes('collection') || name.includes('demo') || name.includes('session'));
                 });
 
                 function getCleanAlbumBaseName(albumName) {
-                    return albumName.toLowerCase()
-                        .replace(/\([^)]*(deluxe|expanded|remaster|bonus|version|edition|explicit)[^)]*\)/g, '')
-                        .replace(/\[[^\]]*(deluxe|expanded|remaster|bonus|version|edition|explicit)[^\]]*\]/g, '')
-                        .replace(/-\s*(deluxe|expanded|remaster|edition).*/g, '')
-                        .trim();
+                    return albumName.toLowerCase().replace(/\([^)]*(deluxe|expanded|remaster|bonus|version|edition)[^)]*\)/g, '').trim();
                 }
 
                 const albumsAndEPs = validReleases.filter(r => r.album_type === 'album' || r.album_type === 'compilation');
                 const singles = validReleases.filter(r => r.album_type === 'single');
-
-                const sortByDate = (a, b) => new Date(a.release_date || '1900-01-01') - new Date(b.release_date || '1900-01-01');
-                albumsAndEPs.sort(sortByDate);
-                singles.sort(sortByDate);
+                albumsAndEPs.sort((a,b) => new Date(a.release_date||'1900-01-01') - new Date(b.release_date||'1900-01-01'));
+                singles.sort((a,b) => new Date(a.release_date||'1900-01-01') - new Date(b.release_date||'1900-01-01'));
 
                 const assignedSongsMap = new Map();
-
                 const fetchTracksInChunks = async (releasesList, label) => {
                     let results = [];
-                    const chunkSize = 3;
-                    for (let i = 0; i < releasesList.length; i += chunkSize) {
-                        const chunk = releasesList.slice(i, i + chunkSize);
-                        if (onProgress) onProgress(`${label} (${i + 1} to ${Math.min(i + chunkSize, releasesList.length)} of ${releasesList.length})...`);
-                        
+                    for (let i = 0; i < releasesList.length; i += 3) {
+                        const chunk = releasesList.slice(i, i + 3);
+                        if (onProgress) onProgress(`${label} (${i + 1} of ${releasesList.length})...`);
                         const promises = chunk.map(async (release) => {
                             const imgUrl = release.images?.[0]?.url || '';
                             const baseAlbumName = getCleanAlbumBaseName(release.name);
                             const tData = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${release.id}/tracks`);
                             return { release, imgUrl, baseAlbumName, tracks: tData?.items || [] };
                         });
-
-                        const chunkResults = await Promise.all(promises);
-                        results.push(...chunkResults);
-                        await new Promise(r => setTimeout(r, 40));
+                        results.push(...(await Promise.all(promises)));
+                        await new Promise(r => setTimeout(r, 30));
                     }
                     return results;
                 };
@@ -455,22 +468,12 @@
                 for (const { release, imgUrl, baseAlbumName, tracks } of albumBatchResults) {
                     for (const t of tracks) {
                         if (!t || !t.artists) continue;
-                        const isMainArtist = t.artists.some(art => art.name.toLowerCase().includes(artistNameLower) || artistNameLower.includes(art.name.toLowerCase()));
-                        if (!isMainArtist) continue;
-
-                        const rawName = t.name;
-                        const rawLower = rawName.toLowerCase();
-                        if (rawLower.includes('instrumental') || rawLower.includes('live') || rawLower.includes('cover') || rawLower.includes('remix') || rawLower.includes('demo') || rawLower.includes('acoustic') || rawLower.includes('edit')) continue;
-
-                        let cleanName = rawLower
-                            .replace(/\([^)]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^)]*\)/g, '')
-                            .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^\]]*\]/g, '')
-                            .trim();
-
+                        if (!t.artists.some(art => art.name.toLowerCase().includes(artistNameLower))) continue;
+                        const rawLower = t.name.toLowerCase();
+                        if (rawLower.includes('instrumental') || rawLower.includes('live') || rawLower.includes('cover') || rawLower.includes('remix') || rawLower.includes('demo') || rawLower.includes('acoustic')) continue;
+                        let cleanName = rawLower.replace(/\([^)]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^)]*\)/g, '').trim();
                         if (!assignedSongsMap.has(cleanName)) {
-                            assignedSongsMap.set(cleanName, {
-                                id: t.id, name: t.name, albumName: release.name, albumId: release.id, albumImg: imgUrl, releaseDate: release.release_date || '1900-01-01', baseAlbumName
-                            });
+                            assignedSongsMap.set(cleanName, { id: t.id, name: t.name, albumName: release.name, albumId: release.id, albumImg: imgUrl, releaseDate: release.release_date || '1900-01-01', baseAlbumName });
                         }
                     }
                 }
@@ -479,50 +482,30 @@
                 for (const { release, imgUrl, baseAlbumName, tracks } of singleBatchResults) {
                     for (const t of tracks) {
                         if (!t || !t.artists) continue;
-                        const isMainArtist = t.artists.some(art => art.name.toLowerCase().includes(artistNameLower) || artistNameLower.includes(art.name.toLowerCase()));
-                        if (!isMainArtist) continue;
-
-                        const rawName = t.name;
-                        const rawLower = rawName.toLowerCase();
-                        if (rawLower.includes('instrumental') || rawLower.includes('live') || rawLower.includes('cover') || rawLower.includes('remix') || rawLower.includes('demo') || rawLower.includes('acoustic') || rawLower.includes('edit')) continue;
-
-                        let cleanName = rawLower
-                            .replace(/\([^)]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^)]*\)/g, '')
-                            .replace(/\[[^\]]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^\]]*\]/g, '')
-                            .trim();
-
+                        if (!t.artists.some(art => art.name.toLowerCase().includes(artistNameLower))) continue;
+                        const rawLower = t.name.toLowerCase();
+                        if (rawLower.includes('instrumental') || rawLower.includes('live') || rawLower.includes('cover') || rawLower.includes('remix') || rawLower.includes('demo') || rawLower.includes('acoustic')) continue;
+                        let cleanName = rawLower.replace(/\([^)]*(remaster|deluxe|bonus|version|edition|live|mix|acoustic|edit)[^)]*\)/g, '').trim();
                         if (!assignedSongsMap.has(cleanName)) {
-                            assignedSongsMap.set(cleanName, {
-                                id: t.id, name: t.name, albumName: release.name, albumId: release.id, albumImg: imgUrl, releaseDate: release.release_date || '1900-01-01', baseAlbumName
-                            });
+                            assignedSongsMap.set(cleanName, { id: t.id, name: t.name, albumName: release.name, albumId: release.id, albumImg: imgUrl, releaseDate: release.release_date || '1900-01-01', baseAlbumName });
                         }
                     }
                 }
 
                 const finalUniqueSongs = Array.from(assignedSongsMap.values());
                 const albumSongCounts = {};
-                for (const song of finalUniqueSongs) {
-                    albumSongCounts[song.albumId] = (albumSongCounts[song.albumId] || 0) + 1;
-                }
-
+                finalUniqueSongs.forEach(s => albumSongCounts[s.albumId] = (albumSongCounts[s.albumId] || 0) + 1);
                 const filteredAlbums = validReleases.filter(rel => (albumSongCounts[rel.id] || 0) >= 2);
-                if (finalUniqueSongs.length > 0) {
-                    storageClient.saveArtist(artistId, artistName, filteredAlbums, finalUniqueSongs);
-                }
-
+                if (finalUniqueSongs.length > 0) storageClient.saveArtist(artistId, artistName, filteredAlbums, finalUniqueSongs);
                 return { albums: filteredAlbums, uniqueSongs: finalUniqueSongs };
             },
             async loadArtistDiscography(artistId, onProgress) {
-                try {
-                    const cached = storageClient.getArtist(artistId);
-                    if (cached && cached.uniqueSongs && cached.uniqueSongs.length > 0) {
-                        artistAlbums = cached.albums;
-                        allUniqueSongs = cached.uniqueSongs;
-                        showStatus(`Loaded instantly from local database cache! (${cached.uniqueSongs.length} tracks)`, false, true);
-                        return cached.uniqueSongs;
-                    }
-                } catch (err) {}
-
+                const cached = storageClient.getArtist(artistId);
+                if (cached && cached.uniqueSongs && cached.uniqueSongs.length > 0) {
+                    artistAlbums = cached.albums;
+                    allUniqueSongs = cached.uniqueSongs;
+                    return cached.uniqueSongs;
+                }
                 const result = await this.fetchAndBuildArtistSongsFromSpotify(artistId, onProgress);
                 artistAlbums = result.albums;
                 allUniqueSongs = result.uniqueSongs;
@@ -601,56 +584,30 @@
                     document.getElementById('profileTotalSwipes').textContent = data.totalSwipes || 0;
                     document.getElementById('profileArtistCount').textContent = (data.artists || []).length;
 
-                    // Love More
                     const loveEl = document.getElementById('profileLoveMore');
                     if (data.loveMoreThanOthers) {
                         const m = data.loveMoreThanOthers;
-                        loveEl.innerHTML = `
-                            <div class="flex items-center gap-3">
-                                <img src="${m.album_img || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-lg object-cover"/>
-                                <div>
-                                    <div class="font-bold text-white text-sm">${m.song_name}</div>
-                                    <div class="text-xs text-slate-400">${m.album_name}</div>
-                                    <div class="text-xs text-emerald-400 mt-1 font-semibold">+${m.elo_diff} Elo vs Global</div>
-                                </div>
-                            </div>`;
+                        loveEl.innerHTML = `<div class="flex items-center gap-3"><img src="${m.album_img || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-lg object-cover"/><div><div class="font-bold text-white text-sm">${m.song_name}</div><div class="text-xs text-slate-400">${m.album_name}</div><div class="text-xs text-emerald-400 mt-1 font-semibold">+${m.elo_diff} Elo vs Global</div></div></div>`;
                     } else {
                         loveEl.innerHTML = `<span class="italic text-slate-400">Complete more matchups to compare!</span>`;
                     }
 
-                    // Hate More
                     const hateEl = document.getElementById('profileHateMore');
                     if (data.hateMoreThanOthers) {
                         const m = data.hateMoreThanOthers;
-                        hateEl.innerHTML = `
-                            <div class="flex items-center gap-3">
-                                <img src="${m.album_img || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-lg object-cover"/>
-                                <div>
-                                    <div class="font-bold text-white text-sm">${m.song_name}</div>
-                                    <div class="text-xs text-slate-400">${m.album_name}</div>
-                                    <div class="text-xs text-red-400 mt-1 font-semibold">${m.elo_diff} Elo vs Global</div>
-                                </div>
-                            </div>`;
+                        hateEl.innerHTML = `<div class="flex items-center gap-3"><img src="${m.album_img || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-lg object-cover"/><div><div class="font-bold text-white text-sm">${m.song_name}</div><div class="text-xs text-slate-400">${m.album_name}</div><div class="text-xs text-red-400 mt-1 font-semibold">${m.elo_diff} Elo vs Global</div></div></div>`;
                     } else {
                         hateEl.innerHTML = `<span class="italic text-slate-400">Complete more matchups to compare!</span>`;
                     }
 
-                    // Artists list
                     const artistListEl = document.getElementById('profileArtistsList');
                     if (data.artists && data.artists.length > 0) {
-                        artistListEl.innerHTML = data.artists.map(art => `
-                            <div class="flex items-center justify-between p-3 bg-slate-950/80 rounded-xl border border-slate-800">
-                                <span class="font-bold text-white text-sm">${art.artist_name}</span>
-                                <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg">${art.swipes_count} swipes</span>
-                            </div>
-                        `).join('');
+                        artistListEl.innerHTML = data.artists.map(art => `<div class="flex items-center justify-between p-3 bg-slate-950/80 rounded-xl border border-slate-800"><span class="font-bold text-white text-sm">${art.artist_name}</span><span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg">${art.swipes_count} swipes</span></div>`).join('');
                     } else {
                         artistListEl.innerHTML = `<p class="text-sm text-slate-400">No artists swiped yet.</p>`;
                     }
                 }
-            } catch (err) {
-                logDebug("Failed to load user profile", err.message);
-            }
+            } catch (err) {}
 
             showGlobalLoading(false);
             document.getElementById('view-profile').classList.remove('hidden');
@@ -708,13 +665,7 @@
                 const genresText = (artist.genres && artist.genres.length > 0) ? artist.genres.slice(0, 2).join(', ') : 'Artist';
                 const item = document.createElement('div');
                 item.className = "flex items-center gap-3.5 p-3.5 hover:bg-slate-800/80 cursor-pointer transition-colors border-b border-slate-800/40 last:border-b-0";
-                item.innerHTML = `
-                    <img src="${imageUrl}" alt="${artist.name}" class="w-10 h-10 rounded-full object-cover border border-slate-700"/>
-                    <div>
-                        <div class="font-bold text-white text-sm">${artist.name}</div>
-                        <div class="text-xs text-slate-400 capitalize">${genresText}</div>
-                    </div>
-                `;
+                item.innerHTML = `<img src="${imageUrl}" class="w-10 h-10 rounded-full object-cover border border-slate-700"/><div><div class="font-bold text-white text-sm">${artist.name}</div><div class="text-xs text-slate-400 capitalize">${genresText}</div></div>`;
                 item.onclick = () => selectArtist(artist);
                 container.appendChild(item);
             });
@@ -757,7 +708,7 @@
                 const watchdogTimer = setTimeout(() => {
                     isTimedOut = true;
                     showGlobalLoading(false);
-                    showStatus(`Loading took longer than expected for ${artist.name}. Click 'Refresh from Spotify'.`, true, true);
+                    showStatus(`Loading took longer than expected for ${artist.name}.`, true, true);
                     if (allUniqueSongs.length === 0) showHome();
                 }, 30000);
 
@@ -808,12 +759,7 @@
                     </div>
                     <div id="accordion-drawer-${album.id}" class="hidden border-t border-slate-800/80 bg-slate-950/60 p-4 space-y-3">
                         <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
-                            ${albumTracks.map((t, idx) => `
-                                <div class="flex items-center gap-2.5 text-xs text-slate-300 p-2 rounded-lg bg-slate-900/40 border border-slate-800/40">
-                                    <span class="text-slate-500 font-bold text-[10px] w-4">${idx + 1}</span>
-                                    <span class="font-medium text-slate-200 truncate">${t.name}</span>
-                                </div>
-                            `).join('')}
+                            ${albumTracks.map((t, idx) => `<div class="flex items-center gap-2.5 text-xs text-slate-300 p-2 rounded-lg bg-slate-900/40 border border-slate-800/40"><span class="text-slate-500 font-bold text-[10px] w-4">${idx + 1}</span><span class="font-medium text-slate-200 truncate">${t.name}</span></div>`).join('')}
                         </div>
                         <button onclick="startEloRanking('album', '${album.id}')" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/15">
                             <i class="fa-solid fa-play"></i> Proceed to Swipe Album
@@ -844,16 +790,23 @@
         }
 
         function switchArtistTab(tab) {
+            document.getElementById('artistTab-rank').classList.add('hidden');
+            document.getElementById('artistTab-myrankings').classList.add('hidden');
+            document.getElementById('artistTab-stats').classList.add('hidden');
+            document.getElementById('tabBtnRank').className = "pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap";
+            document.getElementById('tabBtnMyRankings').className = "pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap";
+            document.getElementById('tabBtnStats').className = "pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap";
+
             if (tab === 'rank') {
                 document.getElementById('artistTab-rank').classList.remove('hidden');
-                document.getElementById('artistTab-stats').classList.add('hidden');
-                document.getElementById('tabBtnRank').className = "pb-3 border-b-2 border-emerald-400 text-emerald-400 transition";
-                document.getElementById('tabBtnStats').className = "pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
-            } else {
-                document.getElementById('artistTab-rank').classList.add('hidden');
+                document.getElementById('tabBtnRank').className = "pb-3 border-b-2 border-emerald-400 text-emerald-400 transition whitespace-nowrap";
+            } else if (tab === 'myrankings') {
+                document.getElementById('artistTab-myrankings').classList.remove('hidden');
+                document.getElementById('tabBtnMyRankings').className = "pb-3 border-b-2 border-emerald-400 text-emerald-400 transition whitespace-nowrap";
+                renderMyRankingsTab();
+            } else if (tab === 'stats') {
                 document.getElementById('artistTab-stats').classList.remove('hidden');
-                document.getElementById('tabBtnStats').className = "pb-3 border-b-2 border-emerald-400 text-emerald-400 transition";
-                document.getElementById('tabBtnRank').className = "pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
+                document.getElementById('tabBtnStats').className = "pb-3 border-b-2 border-emerald-400 text-emerald-400 transition whitespace-nowrap";
                 renderAlbumStats();
             }
         }
@@ -875,14 +828,26 @@
                 return;
             }
 
-            activeTracksPool.forEach(t => eloScores[t.id] = 1000);
+            // Target matchups needed for statistical conformance (roughly N * log(N))
+            targetMatchupsNeeded = Math.max(5, Math.round(activeTracksPool.length * Math.log2(activeTracksPool.length) * 0.75));
+
+            activeTracksPool.forEach(t => eloScores[t.id] = 1200);
             hideAllViews();
             document.getElementById('view-elo').classList.remove('hidden');
+            updateConformanceProgress();
             nextMatchup();
+        }
+
+        function updateConformanceProgress() {
+            const percent = Math.min(100, Math.round((roundCounter / targetMatchupsNeeded) * 100));
+            document.getElementById('conformanceProgressBar').style.width = percent + '%';
+            document.getElementById('progressPercentage').textContent = percent + '%';
         }
 
         function nextMatchup() {
             document.getElementById('matchupCount').textContent = `Matchup ${roundCounter}`;
+            updateConformanceProgress();
+
             const idx1 = Math.floor(Math.random() * activeTracksPool.length);
             let idx2 = Math.floor(Math.random() * activeTracksPool.length);
             while (idx1 === idx2) idx2 = Math.floor(Math.random() * activeTracksPool.length);
@@ -914,7 +879,6 @@
             roundCounter++;
             nextMatchup();
 
-            // Sync matchup vote to Cloudflare D1 backend including userId
             try {
                 await fetch(`${WORKER_BASE_URL}/api/vote`, {
                     method: 'POST',
@@ -927,9 +891,7 @@
                         userId: userId
                     })
                 });
-            } catch (err) {
-                logDebug("Failed to sync vote to D1 database", err.message);
-            }
+            } catch (err) {}
         }
 
         function populateStatsDropdown(albums) {
@@ -944,6 +906,65 @@
             if (albums.length > 0) document.getElementById('statTopAlbum').textContent = albums[0].name;
         }
 
+        // Render Personal "Your Rankings" Tab
+        async function renderMyRankingsTab() {
+            if (!currentArtist) return;
+            let userSongsMap = {};
+
+            try {
+                const res = await fetch(`${WORKER_BASE_URL}/api/user/profile/${userId}`);
+                if (res.ok) {
+                    // Fetch all user votes for comparison
+                }
+            } catch (err) {}
+
+            // Fallback to local eloScores or fetch from user votes if stored
+            const sortedTracks = [...allUniqueSongs].sort((a, b) => (eloScores[b.id] || 1200) - (eloScores[a.id] || 1200));
+
+            if (sortedTracks.length > 0) {
+                document.getElementById('myStatTopSong').textContent = sortedTracks[0].name;
+                document.getElementById('myStatTopAlbum').textContent = sortedTracks[0].albumName;
+            }
+
+            // Overall Personal Songs List
+            const songsContainer = document.getElementById('myOverallSongsList');
+            songsContainer.innerHTML = sortedTracks.slice(0, 15).map((track, idx) => `
+                <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80">
+                    <div class="flex items-center gap-3.5">
+                        <span class="font-black text-emerald-400 text-xs w-6">#${idx + 1}</span>
+                        <div>
+                            <div class="font-bold text-white text-sm">${track.name}</div>
+                            <div class="text-xs text-slate-400 mt-0.5">${track.albumName} • Personal Elo: <span class="text-emerald-400 font-mono font-bold">${eloScores[track.id] || 1200}</span></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Overall Personal Albums Leaderboard (Average track Elo per album)
+            const albumEloMap = {};
+            artistAlbums.forEach(alb => {
+                const albTracks = allUniqueSongs.filter(t => t.albumId === alb.id);
+                if (albTracks.length === 0) return;
+                const totalElo = albTracks.reduce((sum, t) => sum + (eloScores[t.id] || 1200), 0);
+                albumEloMap[alb.id] = { name: alb.name, avgElo: Math.round(totalElo / albTracks.length) };
+            });
+
+            const sortedAlbums = Object.values(albumEloMap).sort((a, b) => b.avgElo - a.avgElo);
+            const albumsContainer = document.getElementById('myOverallAlbumsList');
+            albumsContainer.innerHTML = sortedAlbums.map((alb, idx) => `
+                <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80">
+                    <div class="flex items-center gap-3.5">
+                        <span class="font-black text-emerald-400 text-xs w-6">#${idx + 1}</span>
+                        <div>
+                            <div class="font-bold text-white text-sm">${alb.name}</div>
+                            <div class="text-xs text-slate-400 mt-0.5">Average Elo: <span class="text-emerald-400 font-mono font-bold">${alb.avgElo}</span></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Global Stats Tab with Overall Album & Song Leaderboards
         async function renderAlbumStats() {
             const select = document.getElementById('statsAlbumSelect');
             const albumId = select.value;
@@ -962,37 +983,70 @@
             } catch (err) {}
 
             document.getElementById('statTotalRankers').textContent = globalStats.total_swipes || 0;
-            const tracks = await spotifyClient.getAlbumTracks(albumId);
 
+            // Overall Global Songs Leaderboard
+            const allGlobalSorted = [...allUniqueSongs].sort((a, b) => {
+                const eloA = globalSongsMap[a.id]?.elo_rating || 1200;
+                const eloB = globalSongsMap[b.id]?.elo_rating || 1200;
+                return eloB - eloA;
+            });
+
+            if (allGlobalSorted.length > 0) {
+                document.getElementById('statTopSong').textContent = allGlobalSorted[0].name;
+            }
+
+            // Overall Global Albums Leaderboard (Average global Elo per album)
+            const globalAlbumEloMap = {};
+            artistAlbums.forEach(alb => {
+                const albTracks = allUniqueSongs.filter(t => t.albumId === alb.id);
+                if (albTracks.length === 0) return;
+                const totalElo = albTracks.reduce((sum, t) => sum + (globalSongsMap[t.id]?.elo_rating || 1200), 0);
+                globalAlbumEloMap[alb.id] = { name: alb.name, avgElo: Math.round(totalElo / albTracks.length) };
+            });
+
+            const sortedGlobalAlbums = Object.values(globalAlbumEloMap).sort((a, b) => b.avgElo - a.avgElo);
+            if (sortedGlobalAlbums.length > 0) {
+                document.getElementById('statTopAlbum').textContent = sortedGlobalAlbums[0].name;
+            }
+
+            const globalAlbumsContainer = document.getElementById('globalOverallAlbumsList');
+            globalAlbumsContainer.innerHTML = sortedGlobalAlbums.map((alb, idx) => `
+                <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80">
+                    <div class="flex items-center gap-3.5">
+                        <span class="font-black text-cyan-400 text-xs w-6">#${idx + 1}</span>
+                        <div>
+                            <div class="font-bold text-white text-sm">${alb.name}</div>
+                            <div class="text-xs text-slate-400 mt-0.5">Average Global Elo: <span class="text-cyan-400 font-mono font-bold">${alb.avgElo}</span></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Individual Album Track Rankings (Dropdown selected)
+            const tracks = await spotifyClient.getAlbumTracks(albumId);
             tracks.sort((a, b) => {
                 const eloA = globalSongsMap[a.id]?.elo_rating || 1200;
                 const eloB = globalSongsMap[b.id]?.elo_rating || 1200;
                 return eloB - eloA;
             });
 
-            if (tracks.length > 0) document.getElementById('statTopSong').textContent = tracks[0].name;
-
             const container = document.getElementById('albumTrackRankings');
-            container.innerHTML = '';
-
-            tracks.forEach((track, index) => {
+            container.innerHTML = tracks.map((track, index) => {
                 const gData = globalSongsMap[track.id];
                 const eloRating = gData ? gData.elo_rating : 1200;
                 const totalVotes = gData ? gData.total_votes : 0;
-
-                const item = document.createElement('div');
-                item.className = "flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80";
-                item.innerHTML = `
-                    <div class="flex items-center gap-3.5">
-                        <span class="font-black text-emerald-400 text-xs w-6">#${index + 1}</span>
-                        <div>
-                            <div class="font-bold text-white text-sm">${track.name}</div>
-                            <div class="text-xs text-slate-400 mt-0.5">Global Elo: <span class="text-emerald-400 font-mono font-bold">${eloRating}</span> (${totalVotes} votes)</div>
+                return `
+                    <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80">
+                        <div class="flex items-center gap-3.5">
+                            <span class="font-black text-cyan-400 text-xs w-6">#${index + 1}</span>
+                            <div>
+                                <div class="font-bold text-white text-sm">${track.name}</div>
+                                <div class="text-xs text-slate-400 mt-0.5">Global Elo: <span class="text-cyan-400 font-mono font-bold">${eloRating}</span> (${totalVotes} votes)</div>
+                            </div>
                         </div>
                     </div>
                 `;
-                container.appendChild(item);
-            });
+            }).join('');
         }
 
         window.addEventListener('DOMContentLoaded', () => {
