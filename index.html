@@ -14,6 +14,9 @@
         .animate-shimmer {
             animation: smoothShimmer 2s infinite ease-in-out;
         }
+        html {
+            scroll-behavior: smooth;
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950 overflow-x-hidden">
@@ -27,11 +30,11 @@
     <header class="bg-slate-900/85 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2 cursor-pointer hover:opacity-90 transition truncate" onclick="showHome()">
-                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.5</span>
+                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.6</span>
             </h1>
             <nav class="flex gap-2 sm:gap-3 items-center">
                 <button onclick="showProfilePage()" class="text-xs sm:text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1"><i class="fa-solid fa-user text-emerald-400 mr-1"></i> Profile</button>
-                <button onclick="downloadDebugLog()" class="text-xs bg-slate-800/80 hover:bg-slate-700/80 px-2.5 py-1.5 rounded-lg border border-slate-700/60 text-slate-300 transition flex items-center gap-1 font-medium">
+                <button onclick="downloadDebugLog()" class="hidden sm:flex text-xs bg-slate-800/80 hover:bg-slate-700/80 px-2.5 py-1.5 rounded-lg border border-slate-700/60 text-slate-300 transition items-center gap-1 font-medium">
                     <i class="fa-solid fa-download text-emerald-400"></i> Log
                 </button>
                 <button onclick="showHome()" class="text-xs sm:text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1">Home</button>
@@ -44,7 +47,7 @@
 
         <!-- Search Bar Section -->
         <section class="mb-6 sm:mb-8 relative" id="searchSection">
-            <div class="relative max-w-2xl mx-auto">
+            <div class="relative max-w-2xl mx-auto flex gap-2">
                 <input 
                     type="text" 
                     id="artistSearchInput" 
@@ -53,6 +56,9 @@
                     oninput="handleSearchInput(event)"
                     onkeydown="handleSearchKeyDown(event)"
                 />
+                <button onclick="triggerSearchFromButton()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-3 rounded-2xl transition flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                </button>
             </div>
             <div id="searchResults" class="hidden absolute left-0 right-0 max-w-2xl mx-auto top-16 bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden divide-y divide-slate-800/50"></div>
         </section>
@@ -196,9 +202,19 @@
                 </div>
 
                 <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-                    <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-music text-emerald-400"></i> Overall Song Rankings (Your Tastes)
-                    </h4>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-music text-emerald-400"></i> Overall Song Rankings (Your Tastes)
+                        </h4>
+                        <!-- Categorical Jump Bar -->
+                        <div class="flex flex-wrap gap-1 text-[11px] font-bold">
+                            <button onclick="jumpToCategory('my', 'Love')" class="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-md border border-emerald-500/30 hover:bg-emerald-500/30 transition">Love</button>
+                            <button onclick="jumpToCategory('my', 'Like')" class="px-2 py-1 bg-teal-500/20 text-teal-400 rounded-md border border-teal-500/30 hover:bg-teal-500/30 transition">Like</button>
+                            <button onclick="jumpToCategory('my', 'Neutral')" class="px-2 py-1 bg-slate-800 text-slate-400 rounded-md border border-slate-700 hover:bg-slate-700 transition">Neutral</button>
+                            <button onclick="jumpToCategory('my', 'Meh')" class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded-md border border-amber-500/30 hover:bg-amber-500/30 transition">Meh</button>
+                            <button onclick="jumpToCategory('my', 'Hate')" class="px-2 py-1 bg-rose-500/20 text-rose-400 rounded-md border border-rose-500/30 hover:bg-rose-500/30 transition">Hate</button>
+                        </div>
+                    </div>
                     <div id="myOverallSongsList" class="space-y-2">
                         <p class="text-sm text-slate-400">No personal song rankings recorded yet.</p>
                     </div>
@@ -232,10 +248,24 @@
                 </div>
 
                 <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-                    <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-list-ol text-cyan-400"></i> Overall Song Rankings (Community)
-                    </h4>
-                    <select id="statsAlbumSelect" onchange="renderAlbumStats()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-200 focus:outline-none focus:border-emerald-500 text-sm"></select>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-list-ol text-cyan-400"></i> Overall Song Rankings (Community)
+                        </h4>
+                        <!-- Categorical Jump Bar for Global -->
+                        <div class="flex flex-wrap gap-1 text-[11px] font-bold">
+                            <button onclick="jumpToCategory('global', 'Love')" class="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-md border border-emerald-500/30 hover:bg-emerald-500/30 transition">Love</button>
+                            <button onclick="jumpToCategory('global', 'Like')" class="px-2 py-1 bg-teal-500/20 text-teal-400 rounded-md border border-teal-500/30 hover:bg-teal-500/30 transition">Like</button>
+                            <button onclick="jumpToCategory('global', 'Neutral')" class="px-2 py-1 bg-slate-800 text-slate-400 rounded-md border border-slate-700 hover:bg-slate-700 transition">Neutral</button>
+                            <button onclick="jumpToCategory('global', 'Meh')" class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded-md border border-amber-500/30 hover:bg-amber-500/30 transition">Meh</button>
+                            <button onclick="jumpToCategory('global', 'Hate')" class="px-2 py-1 bg-rose-500/20 text-rose-400 rounded-md border border-rose-500/30 hover:bg-rose-500/30 transition">Hate</button>
+                        </div>
+                    </div>
+                    
+                    <select id="statsAlbumSelect" onchange="renderAlbumStats()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-200 focus:outline-none focus:border-emerald-500 text-sm">
+                        <option value="all">View All Catalog Songs (Full Discography)</option>
+                    </select>
+                    
                     <div id="albumTrackRankings" class="space-y-2 pt-2"></div>
                 </div>
             </div>
@@ -299,7 +329,7 @@
     </main>
 
     <script>
-        const APP_VERSION = "v4.5";
+        const APP_VERSION = "v4.6";
         const WORKER_BASE_URL = 'https://songswipe-api.songswipper.workers.dev';
 
         let userId = localStorage.getItem('songswipe_user_id');
@@ -328,7 +358,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // Persistent Local Client Storage for individual user ratings and votes
         const storageClient = {
             getArtist(artistId) {
                 try {
@@ -362,6 +391,16 @@
                     localStorage.setItem(`songswipe_ratings_${userId}_${artistId}`, JSON.stringify(ratings));
                 } catch (err) {}
             },
+            getArtistSwipes(artistId) {
+                try {
+                    return parseInt(localStorage.getItem(`songswipe_swipes_${userId}_${artistId}`) || '0');
+                } catch (err) { return 0; }
+            },
+            saveArtistSwipes(artistId, count) {
+                try {
+                    localStorage.setItem(`songswipe_swipes_${userId}_${artistId}`, count.toString());
+                } catch (err) {}
+            },
             getUserSwipedArtists() {
                 try {
                     const raw = localStorage.getItem(`songswipe_user_artists_${userId}`);
@@ -373,8 +412,11 @@
             },
             recordUserSwipe(artistId, artistName) {
                 try {
+                    const currentArtistSwipes = this.getArtistSwipes(artistId) + 1;
+                    this.saveArtistSwipes(artistId, currentArtistSwipes);
+
                     const artists = this.getUserSwipedArtists();
-                    artists[artistId] = { artistId, artistName, swipesCount: (artists[artistId]?.swipesCount || 0) + 1, lastSwiped: Date.now() };
+                    artists[artistId] = { artistId, artistName, swipesCount: currentArtistSwipes, lastSwiped: Date.now() };
                     localStorage.setItem(`songswipe_user_artists_${userId}`, JSON.stringify(artists));
                     
                     let total = parseInt(localStorage.getItem(`songswipe_total_votes_${userId}`) || '0') + 1;
@@ -668,22 +710,26 @@
             }, 300);
         }
 
+        async function triggerSearchFromButton() {
+            const query = document.getElementById('artistSearchInput').value.trim();
+            if (!query) return;
+            document.getElementById('searchResults').classList.add('hidden');
+            resetDiscographyState();
+            hideStatus();
+            hideAllViews();
+            showGlobalLoading(true, `Searching artists for "${query}"...`);
+            const artists = await spotifyClient.searchArtists(query);
+            if (artists && artists.length > 0) await selectArtist(artists[0]);
+            else {
+                showGlobalLoading(false);
+                showStatus(`No artist found matching "${query}".`, true, false);
+                showHome();
+            }
+        }
+
         async function handleSearchKeyDown(e) {
             if (e.key === 'Enter') {
-                const query = e.target.value.trim();
-                if (!query) return;
-                document.getElementById('searchResults').classList.add('hidden');
-                resetDiscographyState();
-                hideStatus();
-                hideAllViews();
-                showGlobalLoading(true, `Searching artists for "${query}"...`);
-                const artists = await spotifyClient.searchArtists(query);
-                if (artists && artists.length > 0) await selectArtist(artists[0]);
-                else {
-                    showGlobalLoading(false);
-                    showStatus(`No artist found matching "${query}".`, true, false);
-                    showHome();
-                }
+                await triggerSearchFromButton();
             }
         }
 
@@ -727,8 +773,9 @@
             try {
                 const followersTotal = artist?.followers?.total ?? 150000;
                 const monthlyListeners = (Math.floor(followersTotal * 3.4) + 125000).toLocaleString();
-                const totalSwipes = (globalStats.total_swipes || 0).toLocaleString();
-                const totalSwipers = (globalStats.total_rankers || Math.max(1, Math.floor((globalStats.total_swipes || 0) / 15))).toLocaleString();
+                const personalArtistSwipes = storageClient.getArtistSwipes(artist.id);
+                const totalSwipes = Math.max(globalStats.total_swipes || 0, personalArtistSwipes).toLocaleString();
+                const totalSwipers = Math.max(globalStats.total_rankers || 0, personalArtistSwipes > 0 ? 1 : 0).toLocaleString();
                 const imageUrl = artist.images && artist.images.length > 0 ? artist.images[0].url : 'https://via.placeholder.com/150';
                 
                 document.getElementById('artistBanner').innerHTML = `
@@ -893,12 +940,10 @@
         }
 
         function updateProgressBars() {
-            // Bar 1: Entry Level Swiper (reaches 100% at targetMatchupsNeeded)
             const percent1 = Math.min(100, Math.round((roundCounter / targetMatchupsNeeded) * 100));
             document.getElementById('conformanceProgressBar1').style.width = percent1 + '%';
             document.getElementById('progressPercentage1').textContent = percent1 + '%';
 
-            // Bar 2: Expert Level Swiper (fills based on unique song pairs compared)
             const uniqueComparedCount = Math.min(totalPossiblePairs, comparedSongPairs.size);
             const percent2 = totalPossiblePairs > 0 ? Math.min(100, Math.round((uniqueComparedCount / totalPossiblePairs) * 100)) : 0;
             document.getElementById('conformanceProgressBar2').style.width = percent2 + '%';
@@ -928,7 +973,6 @@
             const winner = currentMatchup[winnerIdx];
             const loser = currentMatchup[winnerIdx === 0 ? 1 : 0];
 
-            // Track pair for Expert bar
             const pairKey = [winner.id, loser.id].sort().join('_');
             comparedSongPairs.add(pairKey);
 
@@ -941,7 +985,6 @@
             eloScores[winner.id] = Math.round(Ra + K * (1 - Ea));
             eloScores[loser.id] = Math.round(Rb + K * (0 - Eb));
 
-            // Save locally immediately so refreshing never loses progress
             storageClient.saveUserRatings(currentArtist.id, eloScores);
             storageClient.recordUserSwipe(currentArtist.id, currentArtist.name);
 
@@ -965,7 +1008,7 @@
 
         function populateStatsDropdown(albums) {
             const select = document.getElementById('statsAlbumSelect');
-            select.innerHTML = '';
+            select.innerHTML = '<option value="all">View All Catalog Songs (Full Discography)</option>';
             albums.forEach(alb => {
                 const opt = document.createElement('option');
                 opt.value = alb.id;
@@ -977,15 +1020,31 @@
 
         function getEloBadge(elo) {
             if (elo > 1250) {
-                return `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Fan Favorite</span>`;
+                return `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Love</span>`;
             } else if (elo > 1200) {
-                return `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-teal-500/20 text-teal-400 border border-teal-500/30">Popular</span>`;
+                return `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-teal-500/20 text-teal-400 border border-teal-500/30">Like</span>`;
             } else if (elo === 1200) {
                 return `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-slate-400 border border-slate-700">Neutral</span>`;
             } else if (elo >= 1150) {
-                return `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">Less Popular</span>`;
+                return `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">Meh</span>`;
             } else {
-                return `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">Unfavorable</span>`;
+                return `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">Hate</span>`;
+            }
+        }
+
+        function jumpToCategory(type, categoryName) {
+            const listId = type === 'my' ? 'myOverallSongsList' : 'albumTrackRankings';
+            const container = document.getElementById(listId);
+            if (!container) return;
+            const items = container.querySelectorAll('.song-rank-item');
+            for (const item of items) {
+                const badge = item.getAttribute('data-category');
+                if (badge === categoryName) {
+                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    item.classList.add('ring-2', 'ring-emerald-400');
+                    setTimeout(() => item.classList.remove('ring-2', 'ring-emerald-400'), 2000);
+                    break;
+                }
             }
         }
 
@@ -1000,12 +1059,18 @@
             }
 
             const songsContainer = document.getElementById('myOverallSongsList');
-            songsContainer.innerHTML = sortedTracks.slice(0, 15).map((track, idx) => {
+            songsContainer.innerHTML = sortedTracks.map((track, idx) => {
                 const elo = savedRatings[track.id] || 1200;
+                let cat = 'Neutral';
+                if (elo > 1250) cat = 'Love';
+                else if (elo > 1200) cat = 'Like';
+                else if (elo >= 1150) cat = 'Meh';
+                else if (elo < 1150) cat = 'Hate';
+
                 return `
-                    <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
+                    <div class="song-rank-item flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3 transition" data-category="${cat}">
                         <div class="flex items-center gap-3 min-w-0">
-                            <span class="font-black text-emerald-400 text-xs w-5 flex-shrink-0">#${idx + 1}</span>
+                            <span class="font-black text-emerald-400 text-xs w-6 flex-shrink-0">#${idx + 1}</span>
                             <div class="min-w-0">
                                 <div class="font-bold text-white text-sm truncate">${track.name}</div>
                                 <div class="text-xs text-slate-400 mt-0.5 truncate">${track.albumName}</div>
@@ -1029,7 +1094,7 @@
             albumsContainer.innerHTML = sortedAlbums.map((alb, idx) => `
                 <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
                     <div class="flex items-center gap-3 min-w-0">
-                        <span class="font-black text-emerald-400 text-xs w-5 flex-shrink-0">#${idx + 1}</span>
+                        <span class="font-black text-emerald-400 text-xs w-6 flex-shrink-0">#${idx + 1}</span>
                         <div class="min-w-0">
                             <div class="font-bold text-white text-sm truncate">${alb.name}</div>
                         </div>
@@ -1041,8 +1106,8 @@
 
         async function renderAlbumStats() {
             const select = document.getElementById('statsAlbumSelect');
-            const albumId = select.value;
-            if (!albumId || !currentArtist) return;
+            const selectedVal = select.value;
+            if (!currentArtist) return;
 
             let globalSongsMap = {};
             let globalStats = { total_swipes: 0 };
@@ -1056,7 +1121,8 @@
                 }
             } catch (err) {}
 
-            document.getElementById('statTotalRankers').textContent = globalStats.total_swipes || 0;
+            const personalSwipes = storageClient.getArtistSwipes(currentArtist.id);
+            document.getElementById('statTotalRankers').textContent = Math.max(globalStats.total_swipes || 0, personalSwipes);
 
             const allGlobalSorted = [...allUniqueSongs].sort((a, b) => {
                 const eloA = globalSongsMap[a.id]?.elo_rating || 1200;
@@ -1085,7 +1151,7 @@
             globalAlbumsContainer.innerHTML = sortedGlobalAlbums.map((alb, idx) => `
                 <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
                     <div class="flex items-center gap-3 min-w-0">
-                        <span class="font-black text-cyan-400 text-xs w-5 flex-shrink-0">#${idx + 1}</span>
+                        <span class="font-black text-cyan-400 text-xs w-6 flex-shrink-0">#${idx + 1}</span>
                         <div class="min-w-0">
                             <div class="font-bold text-white text-sm truncate">${alb.name}</div>
                         </div>
@@ -1094,21 +1160,33 @@
                 </div>
             `).join('');
 
-            const tracks = await spotifyClient.getAlbumTracks(albumId);
-            tracks.sort((a, b) => {
-                const eloA = globalSongsMap[a.id]?.elo_rating || 1200;
-                const eloB = globalSongsMap[b.id]?.elo_rating || 1200;
-                return eloB - eloA;
-            });
+            // Determine whether to show all songs or a specific album's tracks
+            let targetTracks = [];
+            if (selectedVal === 'all') {
+                targetTracks = allGlobalSorted;
+            } else {
+                targetTracks = await spotifyClient.getAlbumTracks(selectedVal);
+                targetTracks.sort((a, b) => {
+                    const eloA = globalSongsMap[a.id]?.elo_rating || 1200;
+                    const eloB = globalSongsMap[b.id]?.elo_rating || 1200;
+                    return eloB - eloA;
+                });
+            }
 
             const container = document.getElementById('albumTrackRankings');
-            container.innerHTML = tracks.map((track, index) => {
+            container.innerHTML = targetTracks.map((track, index) => {
                 const gData = globalSongsMap[track.id];
                 const eloRating = gData ? gData.elo_rating : 1200;
+                let cat = 'Neutral';
+                if (eloRating > 1250) cat = 'Love';
+                else if (eloRating > 1200) cat = 'Like';
+                else if (eloRating >= 1150) cat = 'Meh';
+                else if (eloRating < 1150) cat = 'Hate';
+
                 return `
-                    <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
+                    <div class="song-rank-item flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3 transition" data-category="${cat}">
                         <div class="flex items-center gap-3 min-w-0">
-                            <span class="font-black text-cyan-400 text-xs w-5 flex-shrink-0">#${index + 1}</span>
+                            <span class="font-black text-cyan-400 text-xs w-6 flex-shrink-0">#${index + 1}</span>
                             <div class="min-w-0">
                                 <div class="font-bold text-white text-sm truncate">${track.name}</div>
                                 <div class="text-xs text-slate-400 mt-0.5 truncate">${track.albumName}</div>
