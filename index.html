@@ -30,7 +30,7 @@
     <header class="bg-slate-900/85 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2 cursor-pointer hover:opacity-90 transition truncate" onclick="showHome()">
-                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.10</span>
+                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.12</span>
             </h1>
             <nav class="flex gap-2 sm:gap-3 items-center">
                 <button onclick="showProfilePage()" class="text-xs sm:text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1"><i class="fa-solid fa-user text-emerald-400 mr-1"></i> Profile</button>
@@ -146,7 +146,7 @@
             <div class="flex border-b border-slate-800 gap-4 sm:gap-6 text-sm sm:text-base font-bold overflow-x-auto pb-1">
                 <button id="tabBtnRank" onclick="switchArtistTab('rank')" class="pb-3 border-b-2 border-emerald-400 text-emerald-400 transition whitespace-nowrap">Ranking</button>
                 <button id="tabBtnMyRankings" onclick="switchArtistTab('myrankings')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Your Rankings</button>
-                <button id="tabBtnStats" onclick="switchArtistTab('stats')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Global Leaderboards & Stats</button>
+                <button id="tabBtnStats" onclick="switchArtistTab('stats')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Global Rankings</button>
             </div>
 
             <!-- TAB: RANK OPTIONS -->
@@ -234,19 +234,25 @@
                         <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Global Total Swipes</div>
                         <div id="statTotalRankers" class="text-2xl font-black text-emerald-400">0</div>
                     </div>
-                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
-                        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Global Top Album</div>
-                        <div id="statTopAlbum" class="text-sm sm:text-base font-bold text-white truncate">-</div>
+                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 flex items-center gap-3 shadow-lg">
+                        <img id="statTopAlbumImg" src="https://via.placeholder.com/56" class="w-14 h-14 rounded-xl object-cover shadow-md flex-shrink-0 border border-slate-800" />
+                        <div class="min-w-0">
+                            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Global Top Album</div>
+                            <div id="statTopAlbum" class="text-sm sm:text-base font-bold text-white truncate">-</div>
+                        </div>
                     </div>
-                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
-                        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Global Top Song</div>
-                        <div id="statTopSong" class="text-sm sm:text-base font-bold text-white truncate">-</div>
+                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 flex items-center gap-3 shadow-lg">
+                        <img id="statTopSongImg" src="https://via.placeholder.com/56" class="w-14 h-14 rounded-xl object-cover shadow-md flex-shrink-0 border border-slate-800" />
+                        <div class="min-w-0">
+                            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Global Top Song</div>
+                            <div id="statTopSong" class="text-sm sm:text-base font-bold text-white truncate">-</div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
                     <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-globe text-cyan-400"></i> Overall Album Rankings (Community)
+                        <i class="fa-solid fa-globe text-cyan-400"></i> Album Rankings (Community)
                     </h4>
                     <div id="globalOverallAlbumsList" class="space-y-2">
                         <p class="text-sm text-slate-400">Loading global community data...</p>
@@ -256,7 +262,7 @@
                 <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-list-ol text-cyan-400"></i> Overall Song Rankings (Community)
+                            <i class="fa-solid fa-list-ol text-cyan-400"></i> Song Rankings (Community)
                         </h4>
                         <!-- Categorical Jump Bar for Global -->
                         <div class="flex flex-wrap gap-1 text-[11px] font-bold">
@@ -335,7 +341,7 @@
     </main>
 
     <script>
-        const APP_VERSION = "v4.10";
+        const APP_VERSION = "v4.12";
         const WORKER_BASE_URL = 'https://songswipe-api.songswipper.workers.dev';
 
         let userId = localStorage.getItem('songswipe_user_id');
@@ -723,7 +729,7 @@
             if (!currentArtist) return;
             const personalSwipes = storageClient.getArtistSwipes(currentArtist.id);
             const swiperEl = document.getElementById('bannerSwipesCount');
-            if (swiperEl) swiperEl.textContent = personalSwipes.toLocaleString() + ' Swipes';
+            if (swiperEl) swiperEl.textContent = personalSwipes.toLocaleString();
         }
 
         let searchDebounceTimeout = null;
@@ -803,8 +809,6 @@
             } catch (err) {}
 
             try {
-                const followersTotal = artist?.followers?.total ?? 150000;
-                const monthlyListeners = (Math.floor(followersTotal * 3.4) + 125000).toLocaleString();
                 const personalArtistSwipes = storageClient.getArtistSwipes(artist.id);
                 const totalSwipes = Math.max(globalStats.total_swipes || 0, personalArtistSwipes).toLocaleString();
                 const totalSwipers = Math.max(globalStats.total_rankers || 0, personalArtistSwipes > 0 ? 1 : 0).toLocaleString();
@@ -817,9 +821,6 @@
                             <div class="min-w-0">
                                 <h2 class="text-xl sm:text-3xl font-black text-white truncate">${artist.name}</h2>
                                 <div class="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-3 text-[11px] sm:text-xs font-semibold">
-                                    <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-lg whitespace-nowrap">
-                                        <i class="fa-solid fa-users text-[10px] mr-1"></i> ${monthlyListeners} Monthly Listeners
-                                    </span>
                                     <span class="bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2 py-1 rounded-lg whitespace-nowrap">
                                         <i class="fa-solid fa-bolt text-[10px] mr-1"></i> <span id="bannerSwipesCount">${totalSwipes}</span> Swipes
                                     </span>
@@ -973,7 +974,6 @@
             targetMatchupsNeeded = Math.max(5, Math.round(activeTracksPool.length * Math.log2(activeTracksPool.length) * 0.75));
             totalPossiblePairs = (activeTracksPool.length * (activeTracksPool.length - 1)) / 2;
 
-            // Load persisted progress if any
             const savedProg = storageClient.getUserProgress(currentArtist.id);
             roundCounter = savedProg.roundCounter;
             comparedSongPairs = new Set(savedProg.comparedPairs);
@@ -989,14 +989,12 @@
             const bar2Wrapper = document.getElementById('progressBarWrapper2');
 
             if (roundCounter <= targetMatchupsNeeded) {
-                // Show only Entry Level Swiper
                 bar1Wrapper.classList.remove('hidden');
                 bar2Wrapper.classList.add('hidden');
                 const percent1 = Math.min(100, Math.round((roundCounter / targetMatchupsNeeded) * 100));
                 document.getElementById('conformanceProgressBar1').style.width = percent1 + '%';
                 document.getElementById('progressPercentage1').textContent = percent1 + '%';
             } else {
-                // Entry complete -> Hide Bar 1, show Expert Level Swiper
                 bar1Wrapper.classList.add('hidden');
                 bar2Wrapper.classList.remove('hidden');
                 const uniqueComparedCount = Math.min(totalPossiblePairs, comparedSongPairs.size);
@@ -1043,7 +1041,6 @@
 
             roundCounter++;
 
-            // Save ratings, swipe count, and progress immediately
             storageClient.saveUserRatings(currentArtist.id, eloScores);
             storageClient.recordUserSwipe(currentArtist.id, currentArtist.name);
             storageClient.saveUserProgress(currentArtist.id, roundCounter, comparedSongPairs);
@@ -1075,7 +1072,10 @@
                 opt.textContent = alb.name;
                 select.appendChild(opt);
             });
-            if (albums.length > 0) document.getElementById('statTopAlbum').textContent = albums[0].name;
+            if (albums.length > 0) {
+                document.getElementById('statTopAlbum').textContent = albums[0].name;
+                document.getElementById('statTopAlbumImg').src = albums[0].images?.[0]?.url || 'https://via.placeholder.com/56';
+            }
         }
 
         function getEloBadge(elo) {
@@ -1200,6 +1200,7 @@
 
             if (allGlobalSorted.length > 0) {
                 document.getElementById('statTopSong').textContent = allGlobalSorted[0].name;
+                document.getElementById('statTopSongImg').src = allGlobalSorted[0].albumImg || 'https://via.placeholder.com/56';
             }
 
             const globalAlbumEloMap = {};
@@ -1207,13 +1208,14 @@
                 const albTracks = allUniqueSongs.filter(t => t.albumId === alb.id);
                 if (albTracks.length === 0) return;
                 const totalElo = albTracks.reduce((sum, t) => sum + (globalSongsMap[t.id]?.elo_rating || 1200), 0);
-                const albumImg = alb.images?.[0]?.url || albTracks[0]?.albumImg || 'https://via.placeholder.com/64';
+                const albumImg = alb.images?.[0]?.url || albTracks[0]?.albumImg || 'https://via.placeholder.com/56';
                 globalAlbumEloMap[alb.id] = { name: alb.name, avgElo: Math.round(totalElo / albTracks.length), albumImg };
             });
 
             const sortedGlobalAlbums = Object.values(globalAlbumEloMap).sort((a, b) => b.avgElo - a.avgElo);
             if (sortedGlobalAlbums.length > 0) {
                 document.getElementById('statTopAlbum').textContent = sortedGlobalAlbums[0].name;
+                document.getElementById('statTopAlbumImg').src = sortedGlobalAlbums[0].albumImg;
             }
 
             const globalAlbumsContainer = document.getElementById('globalOverallAlbumsList');
