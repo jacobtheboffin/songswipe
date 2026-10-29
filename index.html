@@ -30,7 +30,7 @@
     <header class="bg-slate-900/85 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2 cursor-pointer hover:opacity-90 transition truncate" onclick="showHome()">
-                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.12</span>
+                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.17</span>
             </h1>
             <nav class="flex gap-2 sm:gap-3 items-center">
                 <button onclick="showProfilePage()" class="text-xs sm:text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1"><i class="fa-solid fa-user text-emerald-400 mr-1"></i> Profile</button>
@@ -115,21 +115,6 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3 shadow-xl">
-                    <h4 class="text-xs sm:text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
-                        <i class="fa-solid fa-heart"></i> You Love More Than Other Fans
-                    </h4>
-                    <div id="profileLoveMore" class="text-slate-400 text-xs sm:text-sm italic">Complete more matchups to compare tastes!</div>
-                </div>
-                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3 shadow-xl">
-                    <h4 class="text-xs sm:text-sm font-bold text-red-400 uppercase tracking-wider flex items-center gap-2">
-                        <i class="fa-solid fa-heart-crack"></i> You Hate More Than Other Fans
-                    </h4>
-                    <div id="profileHateMore" class="text-slate-400 text-xs sm:text-sm italic">Complete more matchups to compare tastes!</div>
-                </div>
-            </div>
-
             <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3 shadow-xl">
                 <h4 class="text-base sm:text-lg font-bold text-white">Artists You've Swiped For</h4>
                 <div id="profileArtistsList" class="space-y-2">
@@ -181,6 +166,38 @@
 
             <!-- TAB: YOUR RANKINGS -->
             <div id="artistTab-myrankings" class="hidden space-y-6">
+                <!-- Hardcore Unlock: Most Different Songs (Hot Takes) -->
+                <div id="hotTakesSection" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-xl space-y-2">
+                        <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-fire"></i> Most Different (Positive Hot Take)
+                        </div>
+                        <div id="hotTakePositiveContent" class="text-sm font-bold text-white truncate">-</div>
+                        <div id="hotTakePositiveSub" class="text-xs text-slate-400 truncate">-</div>
+                    </div>
+                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-rose-500/30 shadow-xl space-y-2">
+                        <div class="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-temperature-arrow-down"></i> Most Different (Negative Hot Take)
+                        </div>
+                        <div id="hotTakeNegativeContent" class="text-sm font-bold text-white truncate">-</div>
+                        <div id="hotTakeNegativeSub" class="text-xs text-slate-400 truncate">-</div>
+                    </div>
+                </div>
+
+                <!-- Obsessive Unlock: Scatter Graph Section -->
+                <div id="scatterGraphSection" class="hidden bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-chart-scatter text-emerald-400"></i> Tastes Comparison Scatter Graph
+                        </h4>
+                        <span class="text-xs bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2.5 py-1 rounded-lg">Obsessive Milestone Reached</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Comparing community averages (dull) vs. your scores (bright). Outliers show which songs stick out most!</p>
+                    <div class="w-full overflow-x-auto bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-center">
+                        <canvas id="tastesScatterCanvas" width="700" height="350" class="max-w-full h-auto"></canvas>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 flex items-center gap-4 shadow-lg">
                         <img id="myStatTopAlbumImg" src="https://via.placeholder.com/64" class="w-16 h-16 rounded-xl object-cover shadow-md flex-shrink-0 border border-slate-800" />
@@ -198,6 +215,7 @@
                     </div>
                 </div>
 
+                <!-- Album Rankings Container -->
                 <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
                     <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-ranking-star text-emerald-400"></i> Album Rankings (Your Tastes)
@@ -205,8 +223,13 @@
                     <div id="myOverallAlbumsList" class="space-y-2">
                         <p class="text-sm text-slate-400">Complete matchups to rank albums.</p>
                     </div>
+                    <!-- Casual Unlock: Album PNG Export Button -->
+                    <button id="exportAlbumBtn" onclick="exportAlbumLeaderboardPNG()" class="hidden w-full mt-3 bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold py-2.5 rounded-xl text-xs transition border border-slate-700 flex items-center justify-center gap-2 shadow">
+                        <i class="fa-solid fa-image"></i> Export Album Leaderboard PNG (Casual Unlocked)
+                    </button>
                 </div>
 
+                <!-- Song Rankings Container -->
                 <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
@@ -224,6 +247,10 @@
                     <div id="myOverallSongsList" class="space-y-2">
                         <p class="text-sm text-slate-400">No personal song rankings recorded yet.</p>
                     </div>
+                    <!-- Casual Unlock: Songs PNG Export Button -->
+                    <button id="exportSongsBtn" onclick="exportTopBottomSongsPNG()" class="hidden w-full mt-3 bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold py-2.5 rounded-xl text-xs transition border border-slate-700 flex items-center justify-center gap-2 shadow">
+                        <i class="fa-solid fa-image"></i> Export Top & Bottom 10 Songs PNG (Casual Unlocked)
+                    </button>
                 </div>
             </div>
 
@@ -264,7 +291,6 @@
                         <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                             <i class="fa-solid fa-list-ol text-cyan-400"></i> Song Rankings (Community)
                         </h4>
-                        <!-- Categorical Jump Bar for Global -->
                         <div class="flex flex-wrap gap-1 text-[11px] font-bold">
                             <button onclick="jumpToCategory('global', 'Love')" class="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-md border border-emerald-500/30 hover:bg-emerald-500/30 transition">Love</button>
                             <button onclick="jumpToCategory('global', 'Like')" class="px-2 py-1 bg-teal-500/20 text-teal-400 rounded-md border border-teal-500/30 hover:bg-teal-500/30 transition">Like</button>
@@ -289,16 +315,21 @@
                 <button onclick="showArtistPage()" class="text-sm font-semibold text-slate-400 hover:text-white flex items-center gap-2 transition">
                     <i class="fa-solid fa-arrow-left"></i> Back to Artist Page
                 </button>
-                <span id="matchupCount" class="text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-full">Matchup 1</span>
+                <div class="flex items-center gap-2">
+                    <button id="undoBtn" onclick="undoLastVote()" class="hidden text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-xl transition items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-rotate-left"></i> Undo
+                    </button>
+                    <span id="matchupCount" class="text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-full">Matchup 1</span>
+                </div>
             </div>
 
-            <!-- Sequential Single Active Progress Bar -->
+            <!-- Sequential Three-Tier Progress Bars -->
             <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-3 shadow-lg">
-                <!-- Bar 1: Entry Level Swiper -->
+                <!-- Bar 1: Casual -->
                 <div id="progressBarWrapper1" class="space-y-1.5">
                     <div class="flex justify-between items-center text-xs font-semibold">
                         <span class="text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-shoe-prints text-emerald-400"></i> Entry Level Swiper
+                            <i class="fa-solid fa-headphones text-emerald-400"></i> Casual Swiper
                         </span>
                         <span id="progressPercentage1" class="text-emerald-400 font-mono">0%</span>
                     </div>
@@ -307,16 +338,29 @@
                     </div>
                 </div>
 
-                <!-- Bar 2: Expert Level Swiper -->
+                <!-- Bar 2: Hardcore -->
                 <div id="progressBarWrapper2" class="hidden space-y-1.5">
                     <div class="flex justify-between items-center text-xs font-semibold">
                         <span class="text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-award text-cyan-400"></i> Expert Level Swiper
+                            <i class="fa-solid fa-fire text-teal-400"></i> Hardcore Swiper
                         </span>
-                        <span id="progressPercentage2" class="text-cyan-400 font-mono">0%</span>
+                        <span id="progressPercentage2" class="text-teal-400 font-mono">0%</span>
                     </div>
                     <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
-                        <div id="conformanceProgressBar2" class="bg-gradient-to-r from-cyan-500 to-blue-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        <div id="conformanceProgressBar2" class="bg-gradient-to-r from-teal-400 to-cyan-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Bar 3: Obsessive -->
+                <div id="progressBarWrapper3" class="hidden space-y-1.5">
+                    <div class="flex justify-between items-center text-xs font-semibold">
+                        <span class="text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-award text-cyan-400"></i> Obsessive Swiper
+                        </span>
+                        <span id="progressPercentage3" class="text-cyan-400 font-mono">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
+                        <div id="conformanceProgressBar3" class="bg-gradient-to-r from-cyan-500 to-blue-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
@@ -341,7 +385,7 @@
     </main>
 
     <script>
-        const APP_VERSION = "v4.12";
+        const APP_VERSION = "v4.17";
         const WORKER_BASE_URL = 'https://songswipe-api.songswipper.workers.dev';
 
         let userId = localStorage.getItem('songswipe_user_id');
@@ -494,9 +538,14 @@
         let eloScores = {};
         let comparedSongPairs = new Set();
         let roundCounter = 1;
-        let targetMatchupsNeeded = 1;
+        
+        let casualTarget = 1;
+        let hardcoreTarget = 1;
         let totalPossiblePairs = 1;
         let selectedAlbumAccordionId = null;
+
+        let lastVoteState = null;
+        let hasUndoneLast = false;
 
         const spotifyClient = {
             accessToken: null,
@@ -677,6 +726,8 @@
             activeTracksPool = [];
             currentArtist = null;
             selectedAlbumAccordionId = null;
+            lastVoteState = null;
+            hasUndoneLast = false;
             document.getElementById('albumsList').innerHTML = '';
             document.getElementById('artistBanner').innerHTML = '';
         }
@@ -709,7 +760,39 @@
 
                 const artistListEl = document.getElementById('profileArtistsList');
                 if (swipedArtistsArr.length > 0) {
-                    artistListEl.innerHTML = swipedArtistsArr.map(art => `<div class="flex items-center justify-between p-3 bg-slate-950/80 rounded-xl border border-slate-800"><span class="font-bold text-white text-sm truncate">${art.artistName}</span><span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg flex-shrink-0">${art.swipesCount} swipes</span></div>`).join('');
+                    artistListEl.innerHTML = swipedArtistsArr.map(art => {
+                        const cachedArt = storageClient.getArtist(art.artistId);
+                        const songCount = cachedArt && cachedArt.uniqueSongs ? cachedArt.uniqueSongs.length : 10;
+                        const cTarget = Math.max(5, Math.round(songCount * Math.log2(Math.max(2, songCount)) * 0.75));
+                        const totalPairs = (songCount * (songCount - 1)) / 2;
+                        const hTarget = Math.min(totalPairs, Math.max(cTarget * 2, Math.round(songCount * Math.pow(Math.log2(Math.max(2, songCount)), 2) * 0.4)));
+
+                        const prog = storageClient.getUserProgress(art.artistId);
+                        const casualDone = prog.roundCounter > cTarget;
+                        const hardcoreDone = prog.comparedPairs.length >= hTarget;
+                        const obsessiveDone = prog.comparedPairs.length >= totalPairs;
+
+                        let badgesHtml = '';
+                        if (casualDone) {
+                            badgesHtml += `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[11px] font-bold">Casual</span>`;
+                        }
+                        if (hardcoreDone) {
+                            badgesHtml += `<span class="bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2 py-0.5 rounded text-[11px] font-bold">Hardcore</span>`;
+                        }
+                        if (obsessiveDone) {
+                            badgesHtml += `<span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded text-[11px] font-bold">Obsessive</span>`;
+                        }
+
+                        return `
+                            <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800 gap-3">
+                                <div class="min-w-0">
+                                    <span class="font-bold text-white text-sm truncate block">${art.artistName}</span>
+                                    <div class="flex flex-wrap gap-1.5 mt-1">${badgesHtml || '<span class="text-xs text-slate-500">In Progress</span>'}</div>
+                                </div>
+                                <span class="text-xs bg-slate-800 text-slate-300 border border-slate-700 px-2.5 py-1 rounded-lg flex-shrink-0">${art.swipesCount} swipes</span>
+                            </div>
+                        `;
+                    }).join('');
                 } else {
                     artistListEl.innerHTML = `<p class="text-sm text-slate-400">No artists swiped yet.</p>`;
                 }
@@ -954,6 +1037,9 @@
             eloScores = {};
             comparedSongPairs.clear();
             roundCounter = 1;
+            lastVoteState = null;
+            hasUndoneLast = false;
+            document.getElementById('undoBtn').classList.add('hidden');
 
             if (mode === 'album' && albumId) {
                 activeTracksPool = await spotifyClient.getAlbumTracks(albumId);
@@ -971,8 +1057,10 @@
                 eloScores[t.id] = savedRatings[t.id] || 1200;
             });
 
-            targetMatchupsNeeded = Math.max(5, Math.round(activeTracksPool.length * Math.log2(activeTracksPool.length) * 0.75));
-            totalPossiblePairs = (activeTracksPool.length * (activeTracksPool.length - 1)) / 2;
+            const N = activeTracksPool.length;
+            casualTarget = Math.max(5, Math.round(N * Math.log2(Math.max(2, N)) * 0.75));
+            totalPossiblePairs = (N * (N - 1)) / 2;
+            hardcoreTarget = Math.min(totalPossiblePairs, Math.max(casualTarget * 2, Math.round(N * Math.pow(Math.log2(Math.max(2, N)), 2) * 0.4)));
 
             const savedProg = storageClient.getUserProgress(currentArtist.id);
             roundCounter = savedProg.roundCounter;
@@ -987,20 +1075,31 @@
         function updateProgressBars() {
             const bar1Wrapper = document.getElementById('progressBarWrapper1');
             const bar2Wrapper = document.getElementById('progressBarWrapper2');
+            const bar3Wrapper = document.getElementById('progressBarWrapper3');
 
-            if (roundCounter <= targetMatchupsNeeded) {
+            const uniqueCompared = comparedSongPairs.size;
+
+            if (roundCounter <= casualTarget) {
                 bar1Wrapper.classList.remove('hidden');
                 bar2Wrapper.classList.add('hidden');
-                const percent1 = Math.min(100, Math.round((roundCounter / targetMatchupsNeeded) * 100));
+                bar3Wrapper.classList.add('hidden');
+                const percent1 = Math.min(100, Math.round((roundCounter / casualTarget) * 100));
                 document.getElementById('conformanceProgressBar1').style.width = percent1 + '%';
                 document.getElementById('progressPercentage1').textContent = percent1 + '%';
-            } else {
+            } else if (uniqueCompared < hardcoreTarget) {
                 bar1Wrapper.classList.add('hidden');
                 bar2Wrapper.classList.remove('hidden');
-                const uniqueComparedCount = Math.min(totalPossiblePairs, comparedSongPairs.size);
-                const percent2 = totalPossiblePairs > 0 ? Math.min(100, Math.round((uniqueComparedCount / totalPossiblePairs) * 100)) : 100;
+                bar3Wrapper.classList.add('hidden');
+                const percent2 = Math.min(100, Math.round((uniqueCompared / hardcoreTarget) * 100));
                 document.getElementById('conformanceProgressBar2').style.width = percent2 + '%';
                 document.getElementById('progressPercentage2').textContent = percent2 + '%';
+            } else {
+                bar1Wrapper.classList.add('hidden');
+                bar2Wrapper.classList.add('hidden');
+                bar3Wrapper.classList.remove('hidden');
+                const percent3 = totalPossiblePairs > 0 ? Math.min(100, Math.round((uniqueCompared / totalPossiblePairs) * 100)) : 100;
+                document.getElementById('conformanceProgressBar3').style.width = percent3 + '%';
+                document.getElementById('progressPercentage3').textContent = percent3 + '%';
             }
         }
 
@@ -1028,6 +1127,18 @@
             const loser = currentMatchup[winnerIdx === 0 ? 1 : 0];
 
             const pairKey = [winner.id, loser.id].sort().join('_');
+
+            lastVoteState = {
+                winnerId: winner.id,
+                loserId: loser.id,
+                pairKey: pairKey,
+                oldRoundCounter: roundCounter,
+                previousMatchup: [...currentMatchup],
+                eloSnapshot: { ...eloScores }
+            };
+            hasUndoneLast = false;
+            document.getElementById('undoBtn').classList.remove('hidden');
+
             comparedSongPairs.add(pairKey);
 
             const K = 32;
@@ -1061,6 +1172,48 @@
                     })
                 });
             } catch (err) {}
+        }
+
+        function undoLastVote() {
+            if (!lastVoteState || hasUndoneLast) return;
+
+            eloScores = lastVoteState.eloSnapshot;
+            roundCounter = lastVoteState.oldRoundCounter;
+            comparedSongPairs.delete(lastVoteState.pairKey);
+            currentMatchup = lastVoteState.previousMatchup;
+
+            const currentArtistSwipes = Math.max(0, storageClient.getArtistSwipes(currentArtist.id) - 1);
+            storageClient.saveArtistSwipes(currentArtist.id, currentArtistSwipes);
+
+            const totalVotes = Math.max(0, parseInt(localStorage.getItem(`songswipe_total_votes_${userId}`) || '0') - 1);
+            localStorage.setItem(`songswipe_total_votes_${userId}`, totalVotes.toString());
+
+            const artists = storageClient.getUserSwipedArtists();
+            if (artists[currentArtist.id]) {
+                artists[currentArtist.id].swipesCount = currentArtistSwipes;
+                if (currentArtistSwipes === 0) {
+                    delete artists[currentArtist.id];
+                }
+                localStorage.setItem(`songswipe_user_artists_${userId}`, JSON.stringify(artists));
+            }
+
+            storageClient.saveUserRatings(currentArtist.id, eloScores);
+            storageClient.saveUserProgress(currentArtist.id, roundCounter, comparedSongPairs);
+            updateArtistBannerStats();
+
+            document.getElementById('matchupCount').textContent = `Matchup ${roundCounter}`;
+            document.getElementById('trackImg0').src = currentMatchup[0].albumImg || 'https://via.placeholder.com/150';
+            document.getElementById('trackName0').textContent = currentMatchup[0].name;
+            document.getElementById('trackAlbum0').textContent = currentMatchup[0].albumName;
+
+            document.getElementById('trackImg1').src = currentMatchup[1].albumImg || 'https://via.placeholder.com/150';
+            document.getElementById('trackName1').textContent = currentMatchup[1].name;
+            document.getElementById('trackAlbum1').textContent = currentMatchup[1].albumName;
+
+            updateProgressBars();
+
+            hasUndoneLast = true;
+            document.getElementById('undoBtn').classList.add('hidden');
         }
 
         function populateStatsDropdown(albums) {
@@ -1108,14 +1261,56 @@
             }
         }
 
+        let cachedSortedAlbums = [];
+        let cachedSortedTracks = [];
+
         async function renderMyRankingsTab() {
             if (!currentArtist) return;
             const savedRatings = storageClient.getUserRatings(currentArtist.id);
-            const sortedTracks = [...allUniqueSongs].sort((a, b) => (savedRatings[b.id] || 1200) - (savedRatings[a.id] || 1200));
+            cachedSortedTracks = [...allUniqueSongs].sort((a, b) => (savedRatings[b.id] || 1200) - (savedRatings[a.id] || 1200));
 
-            if (sortedTracks.length > 0) {
-                document.getElementById('myStatTopSong').textContent = sortedTracks[0].name;
-                document.getElementById('myStatTopSongImg').src = sortedTracks[0].albumImg || 'https://via.placeholder.com/64';
+            const songCount = allUniqueSongs.length;
+            const cTarget = Math.max(5, Math.round(songCount * Math.log2(Math.max(2, songCount)) * 0.75));
+            const totalPairs = (songCount * (songCount - 1)) / 2;
+            const hTarget = Math.min(totalPairs, Math.max(cTarget * 2, Math.round(songCount * Math.pow(Math.log2(Math.max(2, songCount)), 2) * 0.4)));
+
+            const savedProg = storageClient.getUserProgress(currentArtist.id);
+            const isCasualComplete = savedProg.roundCounter > cTarget;
+            const isHardcoreComplete = savedProg.comparedPairs.length >= hTarget;
+            const isObsessiveComplete = savedProg.comparedPairs.length >= totalPairs;
+
+            // Unlock: Casual -> Export buttons
+            const exportAlbumBtn = document.getElementById('exportAlbumBtn');
+            const exportSongsBtn = document.getElementById('exportSongsBtn');
+            if (isCasualComplete) {
+                exportAlbumBtn.classList.remove('hidden');
+                exportSongsBtn.classList.remove('hidden');
+            } else {
+                exportAlbumBtn.classList.add('hidden');
+                exportSongsBtn.classList.add('hidden');
+            }
+
+            // Unlock: Hardcore -> Hot Takes (Most Different Positive / Negative)
+            const hotTakesSection = document.getElementById('hotTakesSection');
+            if (isHardcoreComplete) {
+                hotTakesSection.classList.remove('hidden');
+                await renderHotTakes(savedRatings);
+            } else {
+                hotTakesSection.classList.add('hidden');
+            }
+
+            // Unlock: Obsessive -> Scatter Graph
+            const scatterSection = document.getElementById('scatterGraphSection');
+            if (isObsessiveComplete) {
+                scatterSection.classList.remove('hidden');
+                await renderTastesScatterGraph(savedRatings);
+            } else {
+                scatterSection.classList.add('hidden');
+            }
+
+            if (cachedSortedTracks.length > 0) {
+                document.getElementById('myStatTopSong').textContent = cachedSortedTracks[0].name;
+                document.getElementById('myStatTopSongImg').src = cachedSortedTracks[0].albumImg || 'https://via.placeholder.com/64';
             }
 
             const albumEloMap = {};
@@ -1127,14 +1322,14 @@
                 albumEloMap[alb.id] = { name: alb.name, avgElo: Math.round(totalElo / albTracks.length), albumImg };
             });
 
-            const sortedAlbums = Object.values(albumEloMap).sort((a, b) => b.avgElo - a.avgElo);
-            if (sortedAlbums.length > 0) {
-                document.getElementById('myStatTopAlbum').textContent = sortedAlbums[0].name;
-                document.getElementById('myStatTopAlbumImg').src = sortedAlbums[0].albumImg;
+            cachedSortedAlbums = Object.values(albumEloMap).sort((a, b) => b.avgElo - a.avgElo);
+            if (cachedSortedAlbums.length > 0) {
+                document.getElementById('myStatTopAlbum').textContent = cachedSortedAlbums[0].name;
+                document.getElementById('myStatTopAlbumImg').src = cachedSortedAlbums[0].albumImg;
             }
 
             const songsContainer = document.getElementById('myOverallSongsList');
-            songsContainer.innerHTML = sortedTracks.map((track, idx) => {
+            songsContainer.innerHTML = cachedSortedTracks.map((track, idx) => {
                 const elo = savedRatings[track.id] || 1200;
                 let cat = 'Neutral';
                 if (elo > 1250) cat = 'Love';
@@ -1158,7 +1353,7 @@
             }).join('');
 
             const albumsContainer = document.getElementById('myOverallAlbumsList');
-            albumsContainer.innerHTML = sortedAlbums.map((alb, idx) => `
+            albumsContainer.innerHTML = cachedSortedAlbums.map((alb, idx) => `
                 <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
                     <div class="flex items-center gap-3 min-w-0">
                         <img src="${alb.albumImg}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-slate-800" />
@@ -1170,6 +1365,238 @@
                     <div class="flex-shrink-0">${getEloBadge(alb.avgElo)}</div>
                 </div>
             `).join('');
+        }
+
+        async function renderHotTakes(userRatings) {
+            let globalSongsMap = {};
+            try {
+                const res = await fetch(`${WORKER_BASE_URL}/api/leaderboard/${currentArtist.id}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    (data.songs || []).forEach(s => globalSongsMap[s.song_id] = s);
+                }
+            } catch (err) {}
+
+            let diffs = allUniqueSongs.map(song => {
+                const userElo = userRatings[song.id] || 1200;
+                const globalElo = globalSongsMap[song.id]?.elo_rating || 1200;
+                const diff = userElo - globalElo; // positive means user likes it more than global
+                return { song, diff, userElo, globalElo };
+            });
+
+            if (diffs.length === 0) return;
+
+            diffs.sort((a, b) => b.diff - a.diff);
+            const mostPositive = diffs[0]; // highest positive diff
+            const mostNegative = diffs[diffs.length - 1]; // lowest negative diff
+
+            document.getElementById('hotTakePositiveContent').textContent = mostPositive.song.name;
+            document.getElementById('hotTakePositiveSub').textContent = `${mostPositive.song.albumName} (Your Elo: ${Math.round(mostPositive.userElo)} vs Global: ${Math.round(mostPositive.globalElo)})`;
+
+            document.getElementById('hotTakeNegativeContent').textContent = mostNegative.song.name;
+            document.getElementById('hotTakeNegativeSub').textContent = `${mostNegative.song.albumName} (Your Elo: ${Math.round(mostNegative.userElo)} vs Global: ${Math.round(mostNegative.globalElo)})`;
+        }
+
+        async function renderTastesScatterGraph(userRatings) {
+            let globalSongsMap = {};
+            try {
+                const res = await fetch(`${WORKER_BASE_URL}/api/leaderboard/${currentArtist.id}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    (data.songs || []).forEach(s => globalSongsMap[s.song_id] = s);
+                }
+            } catch (err) {}
+
+            const canvas = document.getElementById('tastesScatterCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const padding = 50;
+            const graphWidth = canvas.width - (padding * 2);
+            const graphHeight = canvas.height - (padding * 2);
+
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, canvas.height - padding);
+            ctx.lineTo(canvas.width - padding, canvas.height - padding);
+            ctx.stroke();
+
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '11px sans-serif';
+            ctx.fillText('Community Average Score (Dull)', canvas.width / 2 - 90, canvas.height - 15);
+            ctx.save();
+            ctx.translate(15, canvas.height / 2 + 50);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Your Score (Bright)', 0, 0);
+            ctx.restore();
+
+            const minElo = 1050;
+            const maxElo = 1350;
+
+            function scaleX(val) {
+                const clamped = Math.max(minElo, Math.min(maxElo, val));
+                return padding + ((clamped - minElo) / (maxElo - minElo)) * graphWidth;
+            }
+
+            function scaleY(val) {
+                const clamped = Math.max(minElo, Math.min(maxElo, val));
+                return canvas.height - padding - ((clamped - minElo) / (maxElo - minElo)) * graphHeight;
+            }
+
+            ctx.strokeStyle = '#1e293b';
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(scaleX(minElo), scaleY(minElo));
+            ctx.lineTo(scaleX(maxElo), scaleY(maxElo));
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            allUniqueSongs.forEach(song => {
+                const globalElo = globalSongsMap[song.id]?.elo_rating || 1200;
+                const userElo = userRatings[song.id] || 1200;
+
+                const cx = scaleX(globalElo);
+                const cy = scaleY(userElo);
+
+                ctx.fillStyle = '#64748b';
+                ctx.beginPath();
+                ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#34d399';
+                ctx.shadowColor = '#10b981';
+                ctx.shadowBlur = 6;
+                ctx.beginPath();
+                ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+        }
+
+        function exportAlbumLeaderboardPNG() {
+            if (!currentArtist || cachedSortedAlbums.length === 0) return;
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 800;
+            canvas.height = 160 + (cachedSortedAlbums.length * 60);
+
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 28px sans-serif';
+            ctx.fillText(`${currentArtist.name} - Album Rankings`, 40, 60);
+
+            ctx.fillStyle = '#10b981';
+            ctx.font = '14px sans-serif';
+            ctx.fillText('Generated via SongSwipe', 40, 90);
+
+            let startY = 130;
+            cachedSortedAlbums.forEach((alb, idx) => {
+                ctx.fillStyle = '#0f172a';
+                ctx.roundRect ? ctx.roundRect(40, startY, 720, 50, 10) : ctx.fillRect(40, startY, 720, 50);
+                ctx.fill();
+
+                ctx.fillStyle = '#10b981';
+                ctx.font = 'bold 16px sans-serif';
+                ctx.fillText(`#${idx + 1}`, 65, startY + 31);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 15px sans-serif';
+                ctx.fillText(alb.name, 120, startY + 31);
+
+                startY += 60;
+            });
+
+            triggerCanvasDownload(canvas, `${currentArtist.name}-album-rankings.png`);
+        }
+
+        function exportTopBottomSongsPNG() {
+            if (!currentArtist || cachedSortedTracks.length === 0) return;
+            const top10 = cachedSortedTracks.slice(0, 10);
+            const bottom10 = cachedSortedTracks.slice(-10).reverse();
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 900;
+            canvas.height = 200 + ((top10.length + bottom10.length) * 45) + 60;
+
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 28px sans-serif';
+            ctx.fillText(`${currentArtist.name} - Top & Bottom 10 Songs`, 40, 60);
+
+            ctx.fillStyle = '#10b981';
+            ctx.font = '14px sans-serif';
+            ctx.fillText('Generated via SongSwipe', 40, 90);
+
+            let startY = 130;
+
+            ctx.fillStyle = '#34d399';
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillText('⭐ Top 10 Songs', 40, startY);
+            startY += 30;
+
+            top10.forEach((track, idx) => {
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(40, startY, 820, 38);
+
+                ctx.fillStyle = '#34d399';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.fillText(`#${idx + 1}`, 60, startY + 24);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.fillText(track.name, 110, startY + 24);
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '12px sans-serif';
+                ctx.fillText(track.albumName, 500, startY + 24);
+
+                startY += 45;
+            });
+
+            startY += 20;
+
+            ctx.fillStyle = '#fb7185';
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillText('💔 Bottom 10 Songs', 40, startY);
+            startY += 30;
+
+            bottom10.forEach((track, idx) => {
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(40, startY, 820, 38);
+
+                ctx.fillStyle = '#fb7185';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.fillText(`#${cachedSortedTracks.length - idx}`, 60, startY + 24);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.fillText(track.name, 110, startY + 24);
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '12px sans-serif';
+                ctx.fillText(track.albumName, 500, startY + 24);
+
+                startY += 45;
+            });
+
+            triggerCanvasDownload(canvas, `${currentArtist.name}-top-bottom-songs.png`);
+        }
+
+        function triggerCanvasDownload(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
         }
 
         async function renderAlbumStats() {
