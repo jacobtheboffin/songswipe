@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SongSwipe - Global Music Ranking & Exploration</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,7 +16,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950 overflow-x-hidden">
 
     <!-- Top Loading Bar -->
     <div id="globalProgressBar" class="hidden fixed top-0 left-0 w-full h-1 bg-slate-900 z-50 overflow-hidden">
@@ -24,32 +24,32 @@
     </div>
 
     <!-- Header / Navigation -->
-    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
+    <header class="bg-slate-900/85 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition" onclick="showHome()">
-                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-mono">v4.4</span>
+            <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2 cursor-pointer hover:opacity-90 transition truncate" onclick="showHome()">
+                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.5</span>
             </h1>
-            <nav class="flex gap-3 items-center">
-                <button onclick="showProfilePage()" class="text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1"><i class="fa-solid fa-user text-emerald-400 mr-1"></i> Profile</button>
-                <button onclick="downloadDebugLog()" class="text-xs bg-slate-800/80 hover:bg-slate-700/80 px-3 py-1.5 rounded-lg border border-slate-700/60 text-slate-300 transition flex items-center gap-1.5 font-medium">
-                    <i class="fa-solid fa-download text-emerald-400"></i> Debug Log
+            <nav class="flex gap-2 sm:gap-3 items-center">
+                <button onclick="showProfilePage()" class="text-xs sm:text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1"><i class="fa-solid fa-user text-emerald-400 mr-1"></i> Profile</button>
+                <button onclick="downloadDebugLog()" class="text-xs bg-slate-800/80 hover:bg-slate-700/80 px-2.5 py-1.5 rounded-lg border border-slate-700/60 text-slate-300 transition flex items-center gap-1 font-medium">
+                    <i class="fa-solid fa-download text-emerald-400"></i> Log
                 </button>
-                <button onclick="showHome()" class="text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1">Home</button>
+                <button onclick="showHome()" class="text-xs sm:text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1">Home</button>
             </nav>
         </div>
     </header>
 
     <!-- Main Content Container -->
-    <main class="flex-grow max-w-5xl w-full mx-auto p-4 md:p-8">
+    <main class="flex-grow max-w-5xl w-full mx-auto p-3 sm:p-6 md:p-8">
 
         <!-- Search Bar Section -->
-        <section class="mb-8 relative" id="searchSection">
+        <section class="mb-6 sm:mb-8 relative" id="searchSection">
             <div class="relative max-w-2xl mx-auto">
                 <input 
                     type="text" 
                     id="artistSearchInput" 
-                    placeholder="Search any artist (e.g., Radiohead, Sleep Token, Loathe)..." 
-                    class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-5 py-4 pl-5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-2xl transition text-base"
+                    placeholder="Search any artist (e.g., Radiohead, Sleep Token)..." 
+                    class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl px-4 sm:px-5 py-3.5 sm:py-4 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-2xl transition text-sm sm:text-base"
                     oninput="handleSearchInput(event)"
                     onkeydown="handleSearchKeyDown(event)"
                 />
@@ -58,13 +58,13 @@
         </section>
 
         <!-- Dynamic Loader Banner -->
-        <div id="loaderBanner" class="hidden mb-8 p-6 bg-slate-900/60 border border-slate-800 rounded-2xl flex items-center justify-center gap-3 text-emerald-400 font-semibold shadow-inner">
-            <i class="fa-solid fa-circle-notch fa-spin text-xl"></i>
+        <div id="loaderBanner" class="hidden mb-6 p-4 sm:p-6 bg-slate-900/60 border border-slate-800 rounded-2xl flex items-center justify-center gap-3 text-emerald-400 font-semibold shadow-inner text-sm">
+            <i class="fa-solid fa-circle-notch fa-spin text-lg"></i>
             <span id="loaderBannerText">Loading discography data...</span>
         </div>
 
         <!-- On-Screen Status Banner -->
-        <div id="statusBanner" class="hidden mb-8 p-4 rounded-2xl text-sm font-medium flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+        <div id="statusBanner" class="hidden mb-6 p-4 rounded-2xl text-sm font-medium flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
             <span id="statusBannerText"></span>
             <div class="flex items-center gap-2">
                 <button id="statusActionBtn" onclick="forceRefreshArtistData()" class="hidden text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition flex items-center gap-1.5">
@@ -76,59 +76,59 @@
 
         <!-- 1. HOME VIEW -->
         <div id="view-home" class="view-tab space-y-6">
-            <div class="bg-gradient-to-b from-slate-900 to-slate-950 p-10 md:p-14 rounded-3xl border border-slate-800/80 text-center shadow-2xl relative overflow-hidden">
+            <div class="bg-gradient-to-b from-slate-900 to-slate-950 p-6 sm:p-10 md:p-14 rounded-3xl border border-slate-800/80 text-center shadow-2xl relative overflow-hidden">
                 <div class="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-                <div class="inline-flex p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 text-3xl mb-4 border border-emerald-500/20">
+                <div class="inline-flex p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 text-2xl sm:text-3xl mb-4 border border-emerald-500/20">
                     <i class="fa-solid fa-layer-group"></i>
                 </div>
-                <h2 class="text-3xl md:text-4xl font-black mb-3 text-white">What is the best song? The worst album? Swipe to reveal the answer!</h2>
-                <p class="text-slate-400 max-w-xl mx-auto text-base leading-relaxed">
+                <h2 class="text-2xl sm:text-3xl md:text-4xl font-black mb-3 text-white">What is the best song? The worst album? Swipe to reveal the answer!</h2>
+                <p class="text-slate-400 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
                     Head to head matching, global rankings and no sign up required! See which songs you hate or love more than everyone else! The ultimate website for music nerds or nerd nerds!
                 </p>
             </div>
         </div>
 
         <!-- 1.5 USER PROFILE VIEW -->
-        <div id="view-profile" class="view-tab hidden space-y-8 max-w-3xl mx-auto">
+        <div id="view-profile" class="view-tab hidden space-y-6 max-w-3xl mx-auto">
             <div class="flex justify-between items-center">
                 <button onclick="showHome()" class="text-sm font-semibold text-slate-400 hover:text-white flex items-center gap-2 transition">
                     <i class="fa-solid fa-arrow-left"></i> Back to Home
                 </button>
-                <span class="text-xs font-mono text-slate-500">User ID: <span id="profileUserIdDisplay"></span></span>
+                <span class="text-xs font-mono text-slate-500 truncate max-w-[180px]">User ID: <span id="profileUserIdDisplay"></span></span>
             </div>
 
-            <h2 class="text-3xl font-black text-white">Your User Profile</h2>
+            <h2 class="text-2xl sm:text-3xl font-black text-white">Your User Profile</h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
                     <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Votes Made</div>
                     <div id="profileTotalSwipes" class="text-3xl font-black text-emerald-400">0</div>
                 </div>
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
                     <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Artists Swiped For</div>
                     <div id="profileArtistCount" class="text-3xl font-black text-cyan-400">0</div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-                    <h4 class="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3 shadow-xl">
+                    <h4 class="text-xs sm:text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
                         <i class="fa-solid fa-heart"></i> You Love More Than Other Fans
                     </h4>
-                    <div id="profileLoveMore" class="text-slate-400 text-sm italic">Complete more matchups to compare tastes!</div>
+                    <div id="profileLoveMore" class="text-slate-400 text-xs sm:text-sm italic">Complete more matchups to compare tastes!</div>
                 </div>
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-                    <h4 class="text-sm font-bold text-red-400 uppercase tracking-wider flex items-center gap-2">
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3 shadow-xl">
+                    <h4 class="text-xs sm:text-sm font-bold text-red-400 uppercase tracking-wider flex items-center gap-2">
                         <i class="fa-solid fa-heart-crack"></i> You Hate More Than Other Fans
                     </h4>
-                    <div id="profileHateMore" class="text-slate-400 text-sm italic">Complete more matchups to compare tastes!</div>
+                    <div id="profileHateMore" class="text-slate-400 text-xs sm:text-sm italic">Complete more matchups to compare tastes!</div>
                 </div>
             </div>
 
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-                <h4 class="text-lg font-bold text-white">Artists You've Swiped For</h4>
+            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3 shadow-xl">
+                <h4 class="text-base sm:text-lg font-bold text-white">Artists You've Swiped For</h4>
                 <div id="profileArtistsList" class="space-y-2">
                     <p class="text-sm text-slate-400">No artists swiped yet.</p>
                 </div>
@@ -136,11 +136,11 @@
         </div>
 
         <!-- 2. ARTIST PAGE VIEW -->
-        <div id="view-artist" class="view-tab hidden space-y-8">
-            <div id="artistBanner" class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-950 p-6 md:p-8 rounded-3xl border border-slate-800/80 shadow-2xl"></div>
+        <div id="view-artist" class="view-tab hidden space-y-6">
+            <div id="artistBanner" class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-950 p-5 sm:p-8 rounded-3xl border border-slate-800/80 shadow-2xl"></div>
 
             <!-- Artist Sub-Navigation Tabs -->
-            <div class="flex border-b border-slate-800 gap-6 text-base font-bold overflow-x-auto">
+            <div class="flex border-b border-slate-800 gap-4 sm:gap-6 text-sm sm:text-base font-bold overflow-x-auto pb-1">
                 <button id="tabBtnRank" onclick="switchArtistTab('rank')" class="pb-3 border-b-2 border-emerald-400 text-emerald-400 transition whitespace-nowrap">Discography & Ranking</button>
                 <button id="tabBtnMyRankings" onclick="switchArtistTab('myrankings')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Your Rankings</button>
                 <button id="tabBtnStats" onclick="switchArtistTab('stats')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Global Leaderboards & Stats</button>
@@ -148,21 +148,21 @@
 
             <!-- TAB: RANK OPTIONS -->
             <div id="artistTab-rank" class="space-y-6">
-                <div onclick="startEloRanking('all')" class="bg-gradient-to-r from-slate-900 to-slate-850 p-6 rounded-2xl border border-slate-800 hover:border-emerald-500/60 cursor-pointer transition transform hover:-translate-y-0.5 shadow-xl flex items-center justify-between group">
-                    <div class="flex items-center gap-5">
-                        <div class="bg-emerald-500/10 p-4 rounded-xl text-emerald-400 text-2xl group-hover:scale-110 transition border border-emerald-500/20">
+                <div onclick="startEloRanking('all')" class="bg-gradient-to-r from-slate-900 to-slate-850 p-5 sm:p-6 rounded-2xl border border-slate-800 hover:border-emerald-500/60 cursor-pointer transition transform hover:-translate-y-0.5 shadow-xl flex items-center justify-between group">
+                    <div class="flex items-center gap-4 sm:gap-5 min-w-0">
+                        <div class="bg-emerald-500/10 p-3 sm:p-4 rounded-xl text-emerald-400 text-xl sm:text-2xl group-hover:scale-110 transition border border-emerald-500/20 flex-shrink-0">
                             <i class="fa-solid fa-bolt"></i>
                         </div>
-                        <div>
-                            <h4 class="font-bold text-lg text-white group-hover:text-emerald-400 transition">Rank All Unique Studio Songs</h4>
-                            <p class="text-xs text-slate-400 mt-1">Rank complete catalog across all albums & EPs (excluding duplicates & variants)</p>
+                        <div class="min-w-0">
+                            <h4 class="font-bold text-base sm:text-lg text-white group-hover:text-emerald-400 transition truncate">Rank All Unique Studio Songs</h4>
+                            <p class="text-xs text-slate-400 mt-0.5">Rank complete catalog across all albums & EPs</p>
                         </div>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition"></i>
+                    <i class="fa-solid fa-chevron-right text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition flex-shrink-0 ml-2"></i>
                 </div>
 
                 <div class="flex justify-between items-center pt-2">
-                    <h4 class="text-xl font-black text-slate-200 flex items-center gap-2">
+                    <h4 class="text-lg sm:text-xl font-black text-slate-200 flex items-center gap-2">
                         <i class="fa-solid fa-record-vinyl text-emerald-400"></i> Rank an Album
                     </h4>
                     <button onclick="forceRefreshArtistData()" class="text-xs bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-emerald-400 px-3 py-1.5 rounded-lg border border-slate-800 transition flex items-center gap-1.5">
@@ -176,19 +176,18 @@
             <!-- TAB: YOUR RANKINGS -->
             <div id="artistTab-myrankings" class="hidden space-y-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
+                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
                         <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Your Top Ranked Album</div>
-                        <div id="myStatTopAlbum" class="text-base font-bold text-white truncate">-</div>
+                        <div id="myStatTopAlbum" class="text-sm sm:text-base font-bold text-white truncate">-</div>
                     </div>
-                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
+                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
                         <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Your Top Ranked Song</div>
-                        <div id="myStatTopSong" class="text-base font-bold text-white truncate">-</div>
+                        <div id="myStatTopSong" class="text-sm sm:text-base font-bold text-white truncate">-</div>
                     </div>
                 </div>
 
-                <!-- Overall Album Ranking Leaderboard (Personal) -->
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-                    <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
+                    <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-ranking-star text-emerald-400"></i> Overall Album Rankings (Your Tastes)
                     </h4>
                     <div id="myOverallAlbumsList" class="space-y-2">
@@ -196,9 +195,8 @@
                     </div>
                 </div>
 
-                <!-- Overall Song Ranking Leaderboard (Personal) -->
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-                    <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
+                    <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-music text-emerald-400"></i> Overall Song Rankings (Your Tastes)
                     </h4>
                     <div id="myOverallSongsList" class="space-y-2">
@@ -210,23 +208,22 @@
             <!-- TAB: GLOBAL STATS -->
             <div id="artistTab-stats" class="hidden space-y-6">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
+                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
                         <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Global Total Swipes</div>
                         <div id="statTotalRankers" class="text-2xl font-black text-emerald-400">0</div>
                     </div>
-                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
+                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
                         <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Global Top Album</div>
-                        <div id="statTopAlbum" class="text-base font-bold text-white truncate">-</div>
+                        <div id="statTopAlbum" class="text-sm sm:text-base font-bold text-white truncate">-</div>
                     </div>
-                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
+                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
                         <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Global Top Song</div>
-                        <div id="statTopSong" class="text-base font-bold text-white truncate">-</div>
+                        <div id="statTopSong" class="text-sm sm:text-base font-bold text-white truncate">-</div>
                     </div>
                 </div>
 
-                <!-- Overall Album Ranking Leaderboard (Global) -->
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-                    <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
+                    <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-globe text-cyan-400"></i> Overall Album Rankings (Community)
                     </h4>
                     <div id="globalOverallAlbumsList" class="space-y-2">
@@ -234,9 +231,8 @@
                     </div>
                 </div>
 
-                <!-- Overall Song Ranking Leaderboard (Global) -->
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-                    <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
+                    <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-list-ol text-cyan-400"></i> Overall Song Rankings (Community)
                     </h4>
                     <select id="statsAlbumSelect" onchange="renderAlbumStats()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-200 focus:outline-none focus:border-emerald-500 text-sm"></select>
@@ -246,7 +242,7 @@
         </div>
 
         <!-- 3. ELO MATCHUP GAME VIEW -->
-        <div id="view-elo" class="view-tab hidden space-y-8 max-w-3xl mx-auto">
+        <div id="view-elo" class="view-tab hidden space-y-6 max-w-3xl mx-auto">
             <div class="flex justify-between items-center">
                 <button onclick="showArtistPage()" class="text-sm font-semibold text-slate-400 hover:text-white flex items-center gap-2 transition">
                     <i class="fa-solid fa-arrow-left"></i> Back to Artist Page
@@ -254,30 +250,48 @@
                 <span id="matchupCount" class="text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-full">Matchup 1</span>
             </div>
 
-            <!-- Ranking Progress Bar -->
-            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-2 shadow-lg">
-                <div class="flex justify-between items-center text-xs font-semibold">
-                    <span class="text-slate-400 uppercase tracking-wider">Ranking Progress</span>
-                    <span id="progressPercentage" class="text-emerald-400 font-mono">0%</span>
+            <!-- Two-Stage Progress Bars -->
+            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-4 shadow-lg">
+                <!-- Bar 1: Entry Level Swiper -->
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center text-xs font-semibold">
+                        <span class="text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-shoe-prints text-emerald-400"></i> Entry Level Swiper
+                        </span>
+                        <span id="progressPercentage1" class="text-emerald-400 font-mono">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
+                        <div id="conformanceProgressBar1" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
                 </div>
-                <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
-                    <div id="conformanceProgressBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+
+                <!-- Bar 2: Expert Level Swiper -->
+                <div class="space-y-1.5 pt-1 border-t border-slate-800/80">
+                    <div class="flex justify-between items-center text-xs font-semibold">
+                        <span class="text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-award text-cyan-400"></i> Expert Level Swiper
+                        </span>
+                        <span id="progressPercentage2" class="text-cyan-400 font-mono">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
+                        <div id="conformanceProgressBar2" class="bg-gradient-to-r from-cyan-500 to-blue-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
 
-            <h2 class="text-2xl font-black text-center text-white">Which track is better?</h2>
+            <h2 class="text-xl sm:text-2xl font-black text-center text-white">Which track is better?</h2>
 
-            <div id="matchupContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div onclick="voteTrack(0)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-3xl p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-2xl group">
-                    <img id="trackImg0" src="" class="w-48 h-48 rounded-2xl object-cover shadow-xl mb-4 group-hover:scale-105 transition duration-300" />
-                    <h3 id="trackName0" class="text-lg font-black text-white mb-1 group-hover:text-emerald-400 transition">Track A</h3>
-                    <p id="trackAlbum0" class="text-xs text-slate-400 font-medium">Album Name</p>
+            <div id="matchupContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div onclick="voteTrack(0)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-3xl p-5 sm:p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-2xl group">
+                    <img id="trackImg0" src="" class="w-36 h-36 sm:w-48 sm:h-48 rounded-2xl object-cover shadow-xl mb-4 group-hover:scale-105 transition duration-300" />
+                    <h3 id="trackName0" class="text-base sm:text-lg font-black text-white mb-1 group-hover:text-emerald-400 transition truncate w-full">Track A</h3>
+                    <p id="trackAlbum0" class="text-xs text-slate-400 font-medium truncate w-full">Album Name</p>
                 </div>
 
-                <div onclick="voteTrack(1)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-3xl p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-2xl group">
-                    <img id="trackImg1" src="" class="w-48 h-48 rounded-2xl object-cover shadow-xl mb-4 group-hover:scale-105 transition duration-300" />
-                    <h3 id="trackName1" class="text-lg font-black text-white mb-1 group-hover:text-emerald-400 transition">Track B</h3>
-                    <p id="trackAlbum1" class="text-xs text-slate-400 font-medium">Album Name</p>
+                <div onclick="voteTrack(1)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-3xl p-5 sm:p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-2xl group">
+                    <img id="trackImg1" src="" class="w-36 h-36 sm:w-48 sm:h-48 rounded-2xl object-cover shadow-xl mb-4 group-hover:scale-105 transition duration-300" />
+                    <h3 id="trackName1" class="text-base sm:text-lg font-black text-white mb-1 group-hover:text-emerald-400 transition truncate w-full">Track B</h3>
+                    <p id="trackAlbum1" class="text-xs text-slate-400 font-medium truncate w-full">Album Name</p>
                 </div>
             </div>
         </div>
@@ -285,7 +299,7 @@
     </main>
 
     <script>
-        const APP_VERSION = "v4.4";
+        const APP_VERSION = "v4.5";
         const WORKER_BASE_URL = 'https://songswipe-api.songswipper.workers.dev';
 
         let userId = localStorage.getItem('songswipe_user_id');
@@ -314,6 +328,7 @@
             URL.revokeObjectURL(url);
         }
 
+        // Persistent Local Client Storage for individual user ratings and votes
         const storageClient = {
             getArtist(artistId) {
                 try {
@@ -332,6 +347,39 @@
                 } catch (err) {
                     return false;
                 }
+            },
+            getUserRatings(artistId) {
+                try {
+                    const raw = localStorage.getItem(`songswipe_ratings_${userId}_${artistId}`);
+                    if (!raw) return {};
+                    return JSON.parse(raw);
+                } catch (err) {
+                    return {};
+                }
+            },
+            saveUserRatings(artistId, ratings) {
+                try {
+                    localStorage.setItem(`songswipe_ratings_${userId}_${artistId}`, JSON.stringify(ratings));
+                } catch (err) {}
+            },
+            getUserSwipedArtists() {
+                try {
+                    const raw = localStorage.getItem(`songswipe_user_artists_${userId}`);
+                    if (!raw) return {};
+                    return JSON.parse(raw);
+                } catch (err) {
+                    return {};
+                }
+            },
+            recordUserSwipe(artistId, artistName) {
+                try {
+                    const artists = this.getUserSwipedArtists();
+                    artists[artistId] = { artistId, artistName, swipesCount: (artists[artistId]?.swipesCount || 0) + 1, lastSwiped: Date.now() };
+                    localStorage.setItem(`songswipe_user_artists_${userId}`, JSON.stringify(artists));
+                    
+                    let total = parseInt(localStorage.getItem(`songswipe_total_votes_${userId}`) || '0') + 1;
+                    localStorage.setItem(`songswipe_total_votes_${userId}`, total.toString());
+                } catch (err) {}
             }
         };
 
@@ -355,7 +403,7 @@
             const textEl = document.getElementById('statusBannerText');
             const actionBtn = document.getElementById('statusActionBtn');
             textEl.textContent = message;
-            banner.className = `mb-8 p-4 rounded-2xl text-sm font-medium flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg ${isError ? 'bg-red-500/10 border border-red-500/30 text-red-400' : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'}`;
+            banner.className = `mb-6 p-4 rounded-2xl text-sm font-medium flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg ${isError ? 'bg-red-500/10 border border-red-500/30 text-red-400' : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'}`;
             if (showRefresh) actionBtn.classList.remove('hidden');
             else actionBtn.classList.add('hidden');
             banner.classList.remove('hidden');
@@ -371,8 +419,10 @@
         let activeTracksPool = [];
         let currentMatchup = [];
         let eloScores = {};
+        let comparedSongPairs = new Set();
         let roundCounter = 1;
         let targetMatchupsNeeded = 1;
+        let totalPossiblePairs = 1;
         let selectedAlbumAccordionId = null;
 
         const spotifyClient = {
@@ -578,34 +628,18 @@
             document.getElementById('profileUserIdDisplay').textContent = userId;
 
             try {
-                const res = await fetch(`${WORKER_BASE_URL}/api/user/profile/${userId}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    document.getElementById('profileTotalSwipes').textContent = data.totalSwipes || 0;
-                    document.getElementById('profileArtistCount').textContent = (data.artists || []).length;
+                const totalVotes = parseInt(localStorage.getItem(`songswipe_total_votes_${userId}`) || '0');
+                const swipedArtistsObj = storageClient.getUserSwipedArtists();
+                const swipedArtistsArr = Object.values(swipedArtistsObj);
 
-                    const loveEl = document.getElementById('profileLoveMore');
-                    if (data.loveMoreThanOthers) {
-                        const m = data.loveMoreThanOthers;
-                        loveEl.innerHTML = `<div class="flex items-center gap-3"><img src="${m.album_img || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-lg object-cover"/><div><div class="font-bold text-white text-sm">${m.song_name}</div><div class="text-xs text-slate-400">${m.album_name}</div><div class="text-xs text-emerald-400 mt-1 font-semibold">+${m.elo_diff} Elo vs Global</div></div></div>`;
-                    } else {
-                        loveEl.innerHTML = `<span class="italic text-slate-400">Complete more matchups to compare!</span>`;
-                    }
+                document.getElementById('profileTotalSwipes').textContent = totalVotes;
+                document.getElementById('profileArtistCount').textContent = swipedArtistsArr.length;
 
-                    const hateEl = document.getElementById('profileHateMore');
-                    if (data.hateMoreThanOthers) {
-                        const m = data.hateMoreThanOthers;
-                        hateEl.innerHTML = `<div class="flex items-center gap-3"><img src="${m.album_img || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-lg object-cover"/><div><div class="font-bold text-white text-sm">${m.song_name}</div><div class="text-xs text-slate-400">${m.album_name}</div><div class="text-xs text-red-400 mt-1 font-semibold">${m.elo_diff} Elo vs Global</div></div></div>`;
-                    } else {
-                        hateEl.innerHTML = `<span class="italic text-slate-400">Complete more matchups to compare!</span>`;
-                    }
-
-                    const artistListEl = document.getElementById('profileArtistsList');
-                    if (data.artists && data.artists.length > 0) {
-                        artistListEl.innerHTML = data.artists.map(art => `<div class="flex items-center justify-between p-3 bg-slate-950/80 rounded-xl border border-slate-800"><span class="font-bold text-white text-sm">${art.artist_name}</span><span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg">${art.swipes_count} swipes</span></div>`).join('');
-                    } else {
-                        artistListEl.innerHTML = `<p class="text-sm text-slate-400">No artists swiped yet.</p>`;
-                    }
+                const artistListEl = document.getElementById('profileArtistsList');
+                if (swipedArtistsArr.length > 0) {
+                    artistListEl.innerHTML = swipedArtistsArr.map(art => `<div class="flex items-center justify-between p-3 bg-slate-950/80 rounded-xl border border-slate-800"><span class="font-bold text-white text-sm truncate">${art.artistName}</span><span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg flex-shrink-0">${art.swipesCount} swipes</span></div>`).join('');
+                } else {
+                    artistListEl.innerHTML = `<p class="text-sm text-slate-400">No artists swiped yet.</p>`;
                 }
             } catch (err) {}
 
@@ -664,7 +698,7 @@
                 const imageUrl = artist.images && artist.images.length > 0 ? artist.images[artist.images.length - 1].url : 'https://via.placeholder.com/40';
                 const item = document.createElement('div');
                 item.className = "flex items-center gap-3.5 p-3.5 hover:bg-slate-800/80 cursor-pointer transition-colors border-b border-slate-800/40 last:border-b-0";
-                item.innerHTML = `<img src="${imageUrl}" class="w-10 h-10 rounded-full object-cover border border-slate-700"/><div><div class="font-bold text-white text-sm">${artist.name}</div></div>`;
+                item.innerHTML = `<img src="${imageUrl}" class="w-10 h-10 rounded-full object-cover border border-slate-700 flex-shrink-0"/><div><div class="font-bold text-white text-sm truncate">${artist.name}</div></div>`;
                 item.onclick = () => selectArtist(artist);
                 container.appendChild(item);
             });
@@ -681,7 +715,6 @@
             showGlobalLoading(true, `Preparing discography for ${artist.name}...`);
             currentArtist = artist;
 
-            // Fetch live D1 database stats for this artist immediately to update banner correctly
             let globalStats = { total_swipes: 0, total_rankers: 0 };
             try {
                 const statRes = await fetch(`${WORKER_BASE_URL}/api/leaderboard/${artist.id}`);
@@ -699,20 +732,20 @@
                 const imageUrl = artist.images && artist.images.length > 0 ? artist.images[0].url : 'https://via.placeholder.com/150';
                 
                 document.getElementById('artistBanner').innerHTML = `
-                    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div class="flex items-center gap-5">
-                            <img src="${imageUrl}" class="w-24 h-24 md:w-28 md:h-28 rounded-2xl object-cover shadow-2xl border border-slate-700/80"/>
-                            <div>
-                                <h2 class="text-2xl md:text-3xl font-black text-white">${artist.name}</h2>
-                                <div class="flex flex-wrap gap-2 mt-3 text-xs font-semibold">
-                                    <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
-                                        <i class="fa-solid fa-users text-xs mr-1"></i> ${monthlyListeners} Monthly Listeners
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
+                        <div class="flex items-center gap-4 sm:gap-5 w-full sm:w-auto">
+                            <img src="${imageUrl}" class="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl object-cover shadow-2xl border border-slate-700/85 flex-shrink-0"/>
+                            <div class="min-w-0">
+                                <h2 class="text-xl sm:text-3xl font-black text-white truncate">${artist.name}</h2>
+                                <div class="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-3 text-[11px] sm:text-xs font-semibold">
+                                    <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-lg whitespace-nowrap">
+                                        <i class="fa-solid fa-users text-[10px] mr-1"></i> ${monthlyListeners} Monthly
                                     </span>
-                                    <span class="bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2.5 py-1 rounded-lg">
-                                        <i class="fa-solid fa-bolt text-xs mr-1"></i> ${totalSwipes} Total Swipes
+                                    <span class="bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2 py-1 rounded-lg whitespace-nowrap">
+                                        <i class="fa-solid fa-bolt text-[10px] mr-1"></i> ${totalSwipes} Swipes
                                     </span>
-                                    <span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2.5 py-1 rounded-lg">
-                                        <i class="fa-solid fa-user-group text-xs mr-1"></i> ${totalSwipers} Swipers
+                                    <span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-1 rounded-lg whitespace-nowrap">
+                                        <i class="fa-solid fa-user-group text-[10px] mr-1"></i> ${totalSwipers} Swipers
                                     </span>
                                 </div>
                             </div>
@@ -766,14 +799,14 @@
                 card.className = "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden transition-all duration-300 shadow-xl";
                 card.innerHTML = `
                     <div onclick="toggleAlbumAccordion('${album.id}')" class="p-4 flex items-center gap-4 cursor-pointer hover:bg-slate-800/50 transition">
-                        <img src="${imgUrl}" class="w-16 h-16 rounded-xl object-cover shadow-md flex-shrink-0"/>
+                        <img src="${imgUrl}" class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover shadow-md flex-shrink-0"/>
                         <div class="flex-grow min-w-0">
                             <h5 class="font-bold text-sm text-white truncate">${album.name}</h5>
                             <div class="text-xs text-slate-400 mt-0.5">${album.release_date ? album.release_date.substring(0,4) : ''} • ${albumTracks.length} Unique Songs</div>
                         </div>
-                        <i id="accordion-arrow-${album.id}" class="fa-solid fa-chevron-down text-slate-500 text-sm transition-transform duration-300"></i>
+                        <i id="accordion-arrow-${album.id}" class="fa-solid fa-chevron-down text-slate-500 text-sm transition-transform duration-300 flex-shrink-0"></i>
                     </div>
-                    <div id="accordion-drawer-${album.id}" class="hidden border-t border-slate-800/80 bg-slate-950/60 p-4 space-y-3">
+                    <div id="accordion-drawer-${album.id}" class="hidden border-t border-slate-800/85 bg-slate-950/60 p-4 space-y-3">
                         <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
                             ${albumTracks.map((t, idx) => `<div class="flex items-center gap-2.5 text-xs text-slate-300 p-2 rounded-lg bg-slate-900/40 border border-slate-800/40"><span class="text-slate-500 font-bold text-[10px] w-4">${idx + 1}</span><span class="font-medium text-slate-200 truncate">${t.name}</span></div>`).join('')}
                         </div>
@@ -831,6 +864,7 @@
             hideStatus();
             activeTracksPool = [];
             eloScores = {};
+            comparedSongPairs.clear();
             roundCounter = 1;
 
             if (mode === 'album' && albumId) {
@@ -844,23 +878,36 @@
                 return;
             }
 
+            const savedRatings = storageClient.getUserRatings(currentArtist.id);
+            activeTracksPool.forEach(t => {
+                eloScores[t.id] = savedRatings[t.id] || 1200;
+            });
+
             targetMatchupsNeeded = Math.max(5, Math.round(activeTracksPool.length * Math.log2(activeTracksPool.length) * 0.75));
-            activeTracksPool.forEach(t => eloScores[t.id] = 1200);
+            totalPossiblePairs = (activeTracksPool.length * (activeTracksPool.length - 1)) / 2;
+
             hideAllViews();
             document.getElementById('view-elo').classList.remove('hidden');
-            updateConformanceProgress();
+            updateProgressBars();
             nextMatchup();
         }
 
-        function updateConformanceProgress() {
-            const percent = Math.min(100, Math.round((roundCounter / targetMatchupsNeeded) * 100));
-            document.getElementById('conformanceProgressBar').style.width = percent + '%';
-            document.getElementById('progressPercentage').textContent = percent + '%';
+        function updateProgressBars() {
+            // Bar 1: Entry Level Swiper (reaches 100% at targetMatchupsNeeded)
+            const percent1 = Math.min(100, Math.round((roundCounter / targetMatchupsNeeded) * 100));
+            document.getElementById('conformanceProgressBar1').style.width = percent1 + '%';
+            document.getElementById('progressPercentage1').textContent = percent1 + '%';
+
+            // Bar 2: Expert Level Swiper (fills based on unique song pairs compared)
+            const uniqueComparedCount = Math.min(totalPossiblePairs, comparedSongPairs.size);
+            const percent2 = totalPossiblePairs > 0 ? Math.min(100, Math.round((uniqueComparedCount / totalPossiblePairs) * 100)) : 0;
+            document.getElementById('conformanceProgressBar2').style.width = percent2 + '%';
+            document.getElementById('progressPercentage2').textContent = percent2 + '%';
         }
 
         function nextMatchup() {
             document.getElementById('matchupCount').textContent = `Matchup ${roundCounter}`;
-            updateConformanceProgress();
+            updateProgressBars();
 
             const idx1 = Math.floor(Math.random() * activeTracksPool.length);
             let idx2 = Math.floor(Math.random() * activeTracksPool.length);
@@ -881,6 +928,10 @@
             const winner = currentMatchup[winnerIdx];
             const loser = currentMatchup[winnerIdx === 0 ? 1 : 0];
 
+            // Track pair for Expert bar
+            const pairKey = [winner.id, loser.id].sort().join('_');
+            comparedSongPairs.add(pairKey);
+
             const K = 32;
             const Ra = eloScores[winner.id] || 1200;
             const Rb = eloScores[loser.id] || 1200;
@@ -889,6 +940,10 @@
 
             eloScores[winner.id] = Math.round(Ra + K * (1 - Ea));
             eloScores[loser.id] = Math.round(Rb + K * (0 - Eb));
+
+            // Save locally immediately so refreshing never loses progress
+            storageClient.saveUserRatings(currentArtist.id, eloScores);
+            storageClient.recordUserSwipe(currentArtist.id, currentArtist.name);
 
             roundCounter++;
             nextMatchup();
@@ -922,21 +977,22 @@
 
         function getEloBadge(elo) {
             if (elo > 1250) {
-                return `<span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Fan Favorite</span>`;
+                return `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Fan Favorite</span>`;
             } else if (elo > 1200) {
-                return `<span class="px-2 py-0.5 rounded text-xs font-bold bg-teal-500/20 text-teal-400 border border-teal-500/30">Popular</span>`;
+                return `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-teal-500/20 text-teal-400 border border-teal-500/30">Popular</span>`;
             } else if (elo === 1200) {
-                return `<span class="px-2 py-0.5 rounded text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700">Neutral</span>`;
+                return `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-slate-400 border border-slate-700">Neutral</span>`;
             } else if (elo >= 1150) {
-                return `<span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">Less Popular</span>`;
+                return `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">Less Popular</span>`;
             } else {
-                return `<span class="px-2 py-0.5 rounded text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">Unfavorable</span>`;
+                return `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">Unfavorable</span>`;
             }
         }
 
         async function renderMyRankingsTab() {
             if (!currentArtist) return;
-            const sortedTracks = [...allUniqueSongs].sort((a, b) => (eloScores[b.id] || 1200) - (eloScores[a.id] || 1200));
+            const savedRatings = storageClient.getUserRatings(currentArtist.id);
+            const sortedTracks = [...allUniqueSongs].sort((a, b) => (savedRatings[b.id] || 1200) - (savedRatings[a.id] || 1200));
 
             if (sortedTracks.length > 0) {
                 document.getElementById('myStatTopSong').textContent = sortedTracks[0].name;
@@ -945,17 +1001,17 @@
 
             const songsContainer = document.getElementById('myOverallSongsList');
             songsContainer.innerHTML = sortedTracks.slice(0, 15).map((track, idx) => {
-                const elo = eloScores[track.id] || 1200;
+                const elo = savedRatings[track.id] || 1200;
                 return `
-                    <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80">
-                        <div class="flex items-center gap-3.5">
-                            <span class="font-black text-emerald-400 text-xs w-6">#${idx + 1}</span>
-                            <div>
-                                <div class="font-bold text-white text-sm">${track.name}</div>
-                                <div class="text-xs text-slate-400 mt-0.5">${track.albumName}</div>
+                    <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="font-black text-emerald-400 text-xs w-5 flex-shrink-0">#${idx + 1}</span>
+                            <div class="min-w-0">
+                                <div class="font-bold text-white text-sm truncate">${track.name}</div>
+                                <div class="text-xs text-slate-400 mt-0.5 truncate">${track.albumName}</div>
                             </div>
                         </div>
-                        <div>${getEloBadge(elo)}</div>
+                        <div class="flex-shrink-0">${getEloBadge(elo)}</div>
                     </div>
                 `;
             }).join('');
@@ -964,21 +1020,21 @@
             artistAlbums.forEach(alb => {
                 const albTracks = allUniqueSongs.filter(t => t.albumId === alb.id);
                 if (albTracks.length === 0) return;
-                const totalElo = albTracks.reduce((sum, t) => sum + (eloScores[t.id] || 1200), 0);
+                const totalElo = albTracks.reduce((sum, t) => sum + (savedRatings[t.id] || 1200), 0);
                 albumEloMap[alb.id] = { name: alb.name, avgElo: Math.round(totalElo / albTracks.length) };
             });
 
             const sortedAlbums = Object.values(albumEloMap).sort((a, b) => b.avgElo - a.avgElo);
             const albumsContainer = document.getElementById('myOverallAlbumsList');
             albumsContainer.innerHTML = sortedAlbums.map((alb, idx) => `
-                <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80">
-                    <div class="flex items-center gap-3.5">
-                        <span class="font-black text-emerald-400 text-xs w-6">#${idx + 1}</span>
-                        <div>
-                            <div class="font-bold text-white text-sm">${alb.name}</div>
+                <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="font-black text-emerald-400 text-xs w-5 flex-shrink-0">#${idx + 1}</span>
+                        <div class="min-w-0">
+                            <div class="font-bold text-white text-sm truncate">${alb.name}</div>
                         </div>
                     </div>
-                    <div>${getEloBadge(alb.avgElo)}</div>
+                    <div class="flex-shrink-0">${getEloBadge(alb.avgElo)}</div>
                 </div>
             `).join('');
         }
@@ -1027,14 +1083,14 @@
 
             const globalAlbumsContainer = document.getElementById('globalOverallAlbumsList');
             globalAlbumsContainer.innerHTML = sortedGlobalAlbums.map((alb, idx) => `
-                <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80">
-                    <div class="flex items-center gap-3.5">
-                        <span class="font-black text-cyan-400 text-xs w-6">#${idx + 1}</span>
-                        <div>
-                            <div class="font-bold text-white text-sm">${alb.name}</div>
+                <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="font-black text-cyan-400 text-xs w-5 flex-shrink-0">#${idx + 1}</span>
+                        <div class="min-w-0">
+                            <div class="font-bold text-white text-sm truncate">${alb.name}</div>
                         </div>
                     </div>
-                    <div>${getEloBadge(alb.avgElo)}</div>
+                    <div class="flex-shrink-0">${getEloBadge(alb.avgElo)}</div>
                 </div>
             `).join('');
 
@@ -1050,15 +1106,15 @@
                 const gData = globalSongsMap[track.id];
                 const eloRating = gData ? gData.elo_rating : 1200;
                 return `
-                    <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80">
-                        <div class="flex items-center gap-3.5">
-                            <span class="font-black text-cyan-400 text-xs w-6">#${index + 1}</span>
-                            <div>
-                                <div class="font-bold text-white text-sm">${track.name}</div>
-                                <div class="text-xs text-slate-400 mt-0.5">${track.albumName}</div>
+                    <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="font-black text-cyan-400 text-xs w-5 flex-shrink-0">#${index + 1}</span>
+                            <div class="min-w-0">
+                                <div class="font-bold text-white text-sm truncate">${track.name}</div>
+                                <div class="text-xs text-slate-400 mt-0.5 truncate">${track.albumName}</div>
                             </div>
                         </div>
-                        <div>${getEloBadge(eloRating)}</div>
+                        <div class="flex-shrink-0">${getEloBadge(eloRating)}</div>
                     </div>
                 `;
             }).join('');
