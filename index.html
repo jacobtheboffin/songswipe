@@ -30,7 +30,7 @@
     <header class="bg-slate-900/85 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2 cursor-pointer hover:opacity-90 transition truncate" onclick="showHome()">
-                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.9</span>
+                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.10</span>
             </h1>
             <nav class="flex gap-2 sm:gap-3 items-center">
                 <button onclick="showProfilePage()" class="text-xs sm:text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1"><i class="fa-solid fa-user text-emerald-400 mr-1"></i> Profile</button>
@@ -73,9 +73,6 @@
         <div id="statusBanner" class="hidden mb-6 p-4 rounded-2xl text-sm font-medium flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
             <span id="statusBannerText"></span>
             <div class="flex items-center gap-2">
-                <button id="statusActionBtn" onclick="forceRefreshArtistData()" class="hidden text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-rotate"></i> Refresh from Spotify
-                </button>
                 <button onclick="hideStatus()" class="text-xs opacity-70 hover:opacity-100 px-2 py-1 rounded bg-black/20 text-slate-300">Dismiss</button>
             </div>
         </div>
@@ -147,7 +144,7 @@
 
             <!-- Artist Sub-Navigation Tabs -->
             <div class="flex border-b border-slate-800 gap-4 sm:gap-6 text-sm sm:text-base font-bold overflow-x-auto pb-1">
-                <button id="tabBtnRank" onclick="switchArtistTab('rank')" class="pb-3 border-b-2 border-emerald-400 text-emerald-400 transition whitespace-nowrap">Discography & Ranking</button>
+                <button id="tabBtnRank" onclick="switchArtistTab('rank')" class="pb-3 border-b-2 border-emerald-400 text-emerald-400 transition whitespace-nowrap">Ranking</button>
                 <button id="tabBtnMyRankings" onclick="switchArtistTab('myrankings')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Your Rankings</button>
                 <button id="tabBtnStats" onclick="switchArtistTab('stats')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Global Leaderboards & Stats</button>
             </div>
@@ -160,20 +157,23 @@
                             <i class="fa-solid fa-bolt"></i>
                         </div>
                         <div class="min-w-0">
-                            <h4 class="font-bold text-base sm:text-lg text-white group-hover:text-emerald-400 transition truncate">Rank All Unique Studio Songs</h4>
-                            <p class="text-xs text-slate-400 mt-0.5">Rank complete catalog across all albums & EPs</p>
+                            <h4 class="font-bold text-base sm:text-lg text-white group-hover:text-emerald-400 transition truncate">Rank All Songs</h4>
                         </div>
                     </div>
                     <i class="fa-solid fa-chevron-right text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition flex-shrink-0 ml-2"></i>
+                </div>
+
+                <!-- OR Divider -->
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-slate-800"></div>
+                    <span class="flex-shrink mx-4 text-xs font-mono font-bold text-slate-400 uppercase tracking-widest">OR</span>
+                    <div class="flex-grow border-t border-slate-800"></div>
                 </div>
 
                 <div class="flex justify-between items-center pt-2">
                     <h4 class="text-lg sm:text-xl font-black text-slate-200 flex items-center gap-2">
                         <i class="fa-solid fa-record-vinyl text-emerald-400"></i> Rank an Album
                     </h4>
-                    <button onclick="forceRefreshArtistData()" class="text-xs bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-emerald-400 px-3 py-1.5 rounded-lg border border-slate-800 transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-rotate text-emerald-400"></i> Refresh from Spotify
-                    </button>
                 </div>
                 
                 <div id="albumsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
@@ -182,19 +182,25 @@
             <!-- TAB: YOUR RANKINGS -->
             <div id="artistTab-myrankings" class="hidden space-y-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
-                        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Your Top Ranked Album</div>
-                        <div id="myStatTopAlbum" class="text-sm sm:text-base font-bold text-white truncate">-</div>
+                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 flex items-center gap-4 shadow-lg">
+                        <img id="myStatTopAlbumImg" src="https://via.placeholder.com/64" class="w-16 h-16 rounded-xl object-cover shadow-md flex-shrink-0 border border-slate-800" />
+                        <div class="min-w-0">
+                            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Top Ranked Album</div>
+                            <div id="myStatTopAlbum" class="text-sm sm:text-base font-bold text-white truncate">-</div>
+                        </div>
                     </div>
-                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 text-center shadow-lg">
-                        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Your Top Ranked Song</div>
-                        <div id="myStatTopSong" class="text-sm sm:text-base font-bold text-white truncate">-</div>
+                    <div class="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 flex items-center gap-4 shadow-lg">
+                        <img id="myStatTopSongImg" src="https://via.placeholder.com/64" class="w-16 h-16 rounded-xl object-cover shadow-md flex-shrink-0 border border-slate-800" />
+                        <div class="min-w-0">
+                            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Top Ranked Song</div>
+                            <div id="myStatTopSong" class="text-sm sm:text-base font-bold text-white truncate">-</div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
                     <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-ranking-star text-emerald-400"></i> Overall Album Rankings (Your Tastes)
+                        <i class="fa-solid fa-ranking-star text-emerald-400"></i> Album Rankings (Your Tastes)
                     </h4>
                     <div id="myOverallAlbumsList" class="space-y-2">
                         <p class="text-sm text-slate-400">Complete matchups to rank albums.</p>
@@ -204,7 +210,7 @@
                 <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-music text-emerald-400"></i> Overall Song Rankings (Your Tastes)
+                            <i class="fa-solid fa-music text-emerald-400"></i> Song Rankings (Your Tastes)
                         </h4>
                         <!-- Categorical Jump Bar -->
                         <div class="flex flex-wrap gap-1 text-[11px] font-bold">
@@ -263,7 +269,7 @@
                     </div>
                     
                     <select id="statsAlbumSelect" onchange="renderAlbumStats()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-200 focus:outline-none focus:border-emerald-500 text-sm">
-                        <option value="all">View All Catalog Songs (Full Discography)</option>
+                        <option value="all">Full Discography</option>
                     </select>
                     
                     <div id="albumTrackRankings" class="space-y-2 pt-2"></div>
@@ -280,10 +286,10 @@
                 <span id="matchupCount" class="text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-full">Matchup 1</span>
             </div>
 
-            <!-- Two-Stage Progress Bars -->
-            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-4 shadow-lg">
+            <!-- Sequential Single Active Progress Bar -->
+            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-3 shadow-lg">
                 <!-- Bar 1: Entry Level Swiper -->
-                <div class="space-y-1.5">
+                <div id="progressBarWrapper1" class="space-y-1.5">
                     <div class="flex justify-between items-center text-xs font-semibold">
                         <span class="text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                             <i class="fa-solid fa-shoe-prints text-emerald-400"></i> Entry Level Swiper
@@ -296,7 +302,7 @@
                 </div>
 
                 <!-- Bar 2: Expert Level Swiper -->
-                <div class="space-y-1.5 pt-1 border-t border-slate-800/80">
+                <div id="progressBarWrapper2" class="hidden space-y-1.5">
                     <div class="flex justify-between items-center text-xs font-semibold">
                         <span class="text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                             <i class="fa-solid fa-award text-cyan-400"></i> Expert Level Swiper
@@ -329,7 +335,7 @@
     </main>
 
     <script>
-        const APP_VERSION = "v4.9";
+        const APP_VERSION = "v4.10";
         const WORKER_BASE_URL = 'https://songswipe-api.songswipper.workers.dev';
 
         let userId = localStorage.getItem('songswipe_user_id');
@@ -401,6 +407,28 @@
                     localStorage.setItem(`songswipe_swipes_${userId}_${artistId}`, count.toString());
                 } catch (err) {}
             },
+            getUserProgress(artistId) {
+                try {
+                    const raw = localStorage.getItem(`songswipe_progress_${userId}_${artistId}`);
+                    if (!raw) return { roundCounter: 1, comparedPairs: [] };
+                    const parsed = JSON.parse(raw);
+                    return {
+                        roundCounter: parsed.roundCounter || 1,
+                        comparedPairs: parsed.comparedPairs || []
+                    };
+                } catch (err) {
+                    return { roundCounter: 1, comparedPairs: [] };
+                }
+            },
+            saveUserProgress(artistId, roundCounter, comparedPairsSet) {
+                try {
+                    const data = {
+                        roundCounter,
+                        comparedPairs: Array.from(comparedPairsSet)
+                    };
+                    localStorage.setItem(`songswipe_progress_${userId}_${artistId}`, JSON.stringify(data));
+                } catch (err) {}
+            },
             getUserSwipedArtists() {
                 try {
                     const raw = localStorage.getItem(`songswipe_user_artists_${userId}`);
@@ -440,14 +468,11 @@
             }
         }
 
-        function showStatus(message, isError = false, showRefresh = false) {
+        function showStatus(message, isError = false) {
             const banner = document.getElementById('statusBanner');
             const textEl = document.getElementById('statusBannerText');
-            const actionBtn = document.getElementById('statusActionBtn');
             textEl.textContent = message;
             banner.className = `mb-6 p-4 rounded-2xl text-sm font-medium flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg ${isError ? 'bg-red-500/10 border border-red-500/30 text-red-400' : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'}`;
-            if (showRefresh) actionBtn.classList.remove('hidden');
-            else actionBtn.classList.add('hidden');
             banner.classList.remove('hidden');
         }
 
@@ -472,21 +497,21 @@
             async initToken() {
                 try {
                     const response = await fetchWithTimeout(`${WORKER_BASE_URL}/api/spotify-token`, {}, 8000);
-                    if (!response || !response.ok) return { success: false, status: response?.status || 500, error: "Token endpoint failed" };
+                    if (!response || !response.ok) return { success: false, status: response?.status || 500 };
                     const data = await response.json();
                     if (data.access_token) {
                         this.accessToken = data.access_token;
                         return { success: true, status: 200 };
                     }
-                    return { success: false, status: 500, error: "No access token in response" };
+                    return { success: false, status: 500 };
                 } catch (err) {
-                    return { success: false, status: 500, error: err.message };
+                    return { success: false, status: 500 };
                 }
             },
             async fetchSpotify(url) {
                 if (!this.accessToken) {
                     const tokenRes = await this.initToken();
-                    if (!tokenRes.success) return { success: false, status: tokenRes.status, error: tokenRes.error };
+                    if (!tokenRes.success) return { success: false, status: tokenRes.status };
                 }
                 try {
                     let res = await fetchWithTimeout(url, { headers: { 'Authorization': `Bearer ${this.accessToken}` } }, 8000);
@@ -495,32 +520,27 @@
                         if (tokenRes.success) {
                             res = await fetchWithTimeout(url, { headers: { 'Authorization': `Bearer ${this.accessToken}` } }, 8000);
                         } else {
-                            return { success: false, status: 401, error: "Token re-auth failed" };
+                            return { success: false, status: 401 };
                         }
                     }
-                    if (!res) return { success: false, status: 0, error: "Network timeout or unreachable" };
-                    if (!res.ok) {
-                        return { success: false, status: res.status, error: `Spotify API responded with error status ${res.status}` };
-                    }
+                    if (!res) return { success: false, status: 0 };
+                    if (!res.ok) return { success: false, status: res.status };
                     const data = await res.json();
                     return { success: true, status: res.status, data };
                 } catch (err) {
-                    return { success: false, status: 500, error: err.message };
+                    return { success: false, status: 500 };
                 }
             },
             async searchArtists(query) {
                 const result = await this.fetchSpotify(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=artist&limit=5`);
-                if (!result.success) {
-                    logDebug(`Search API failed with status ${result.status}: ${result.error}`);
-                    return [];
-                }
+                if (!result.success) return [];
                 return result.data?.artists?.items || [];
             },
             async fetchAndBuildArtistSongsFromSpotify(artistId, onProgress) {
                 if (onProgress) onProgress("Fetching artist profile...");
                 const artistRes = await this.fetchSpotify(`https://api.spotify.com/v1/artists/${artistId}`);
                 if (!artistRes.success) {
-                    throw new Error(`API Error ${artistRes.status}: Failed to fetch artist profile from Spotify (${artistRes.error}).`);
+                    throw new Error(`Failed to fetch artist profile from Spotify (HTTP ${artistRes.status}).`);
                 }
                 const artistName = artistRes.data?.name || '';
 
@@ -528,19 +548,11 @@
                 let url = `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single,compilation`;
                 let allReleases = [];
                 let pageCount = 0;
-                let apiFailed = false;
-                let lastErrorStatus = 200;
 
                 while (url && pageCount < 10) {
                     pageCount++;
                     const albumsRes = await this.fetchSpotify(url);
-                    if (!albumsRes.success) {
-                        apiFailed = true;
-                        lastErrorStatus = albumsRes.status;
-                        logDebug(`Albums API failed at page ${pageCount} with status ${albumsRes.status}: ${albumsRes.error}`);
-                        break;
-                    }
-                    if (!albumsRes.data || !albumsRes.data.items) break;
+                    if (!albumsRes.success || !albumsRes.data || !albumsRes.data.items) break;
                     allReleases.push(...albumsRes.data.items);
                     url = (albumsRes.data.next && albumsRes.data.next !== url) ? albumsRes.data.next : null;
                 }
@@ -560,10 +572,7 @@
                         const promises = chunk.map(async (release) => {
                             const imgUrl = release.images?.[0]?.url || '';
                             const tRes = await this.fetchSpotify(`https://api.spotify.com/v1/albums/${release.id}/tracks`);
-                            if (!tRes.success) {
-                                logDebug(`Failed tracks fetch for album ${release.id} with status ${tRes.status}`);
-                                return { release, imgUrl, tracks: [] };
-                            }
+                            if (!tRes.success) return { release, imgUrl, tracks: [] };
                             return { release, imgUrl, tracks: tRes.data?.items || [] };
                         });
                         results.push(...(await Promise.all(promises)));
@@ -616,7 +625,7 @@
                 }
 
                 if (finalUniqueSongs.length === 0) {
-                    throw new Error(`API returned HTTP status ${lastErrorStatus}. Check rate limits or network connection.`);
+                    throw new Error("Zero tracks returned from Spotify for this artist.");
                 }
 
                 const albumSongCounts = {};
@@ -627,10 +636,8 @@
                 return { albums: filteredAlbums, uniqueSongs: finalUniqueSongs };
             },
             async loadArtistDiscography(artistId, onProgress) {
-                // ALWAYS check localStorage first on any tab switch or page view
                 const cached = storageClient.getArtist(artistId);
                 if (cached && cached.uniqueSongs && cached.uniqueSongs.length > 0) {
-                    logDebug(`Loaded artist ${artistId} from localStorage cache.`);
                     artistAlbums = cached.albums;
                     allUniqueSongs = cached.uniqueSongs;
                     return cached.uniqueSongs;
@@ -655,26 +662,6 @@
             } catch (error) {
                 clearTimeout(id);
                 return null;
-            }
-        }
-
-        async function forceRefreshArtistData() {
-            if (!currentArtist) return;
-            showGlobalLoading(true, `Refreshing ${currentArtist.name} from Spotify...`);
-            try {
-                localStorage.removeItem(`songswipe_artist_${currentArtist.id}`);
-                const result = await spotifyClient.fetchAndBuildArtistSongsFromSpotify(currentArtist.id, (text) => showGlobalLoading(true, text));
-                artistAlbums = result.albums;
-                allUniqueSongs = result.uniqueSongs;
-                showGlobalLoading(false);
-                renderArtistAlbums(artistAlbums);
-                populateStatsDropdown(artistAlbums);
-                showArtistPage();
-                switchArtistTab('rank');
-                showStatus(`Refreshed ${allUniqueSongs.length} unique tracks from Spotify!`, false, false);
-            } catch (err) {
-                showGlobalLoading(false);
-                showStatus(`Refresh failed: ${err.message}`, true, true);
             }
         }
 
@@ -729,6 +716,14 @@
         function showArtistPage() {
             hideAllViews();
             document.getElementById('view-artist').classList.remove('hidden');
+            updateArtistBannerStats();
+        }
+
+        function updateArtistBannerStats() {
+            if (!currentArtist) return;
+            const personalSwipes = storageClient.getArtistSwipes(currentArtist.id);
+            const swiperEl = document.getElementById('bannerSwipesCount');
+            if (swiperEl) swiperEl.textContent = personalSwipes.toLocaleString() + ' Swipes';
         }
 
         let searchDebounceTimeout = null;
@@ -759,7 +754,7 @@
             if (artists && artists.length > 0) await selectArtist(artists[0]);
             else {
                 showGlobalLoading(false);
-                showStatus(`No artist found matching "${query}".`, true, false);
+                showStatus(`No artist found matching "${query}".`, true);
                 showHome();
             }
         }
@@ -823,10 +818,10 @@
                                 <h2 class="text-xl sm:text-3xl font-black text-white truncate">${artist.name}</h2>
                                 <div class="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-3 text-[11px] sm:text-xs font-semibold">
                                     <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-lg whitespace-nowrap">
-                                        <i class="fa-solid fa-users text-[10px] mr-1"></i> ${monthlyListeners} Monthly
+                                        <i class="fa-solid fa-users text-[10px] mr-1"></i> ${monthlyListeners} Monthly Listeners
                                     </span>
                                     <span class="bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2 py-1 rounded-lg whitespace-nowrap">
-                                        <i class="fa-solid fa-bolt text-[10px] mr-1"></i> ${totalSwipes} Swipes
+                                        <i class="fa-solid fa-bolt text-[10px] mr-1"></i> <span id="bannerSwipesCount">${totalSwipes}</span> Swipes
                                     </span>
                                     <span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-1 rounded-lg whitespace-nowrap">
                                         <i class="fa-solid fa-user-group text-[10px] mr-1"></i> ${totalSwipers} Swipers
@@ -841,11 +836,10 @@
                 const watchdogTimer = setTimeout(() => {
                     isTimedOut = true;
                     showGlobalLoading(false);
-                    showStatus(`Loading took longer than expected for ${artist.name}.`, true, true);
+                    showStatus(`Loading took longer than expected for ${artist.name}.`, true);
                     if (allUniqueSongs.length === 0) showHome();
                 }, 30000);
 
-                // This checks localStorage first, avoiding duplicate API calls on tab switches
                 allUniqueSongs = await spotifyClient.loadArtistDiscography(artist.id, (text) => {
                     if (!isTimedOut) showGlobalLoading(true, text);
                 });
@@ -854,7 +848,7 @@
                 if (!isTimedOut) {
                     showGlobalLoading(false);
                     if (!allUniqueSongs || allUniqueSongs.length === 0) {
-                        showStatus(`No valid studio tracks found for ${artist.name}.`, true, true);
+                        showStatus(`No valid studio tracks found for ${artist.name}.`, true);
                         showHome();
                         return;
                     }
@@ -865,7 +859,7 @@
                 }
             } catch (err) {
                 showGlobalLoading(false);
-                showStatus(`${err.message}`, true, true);
+                showStatus(`${err.message}`, true);
                 showHome();
             }
         }
@@ -924,7 +918,6 @@
         }
 
         function switchArtistTab(tab) {
-            // Ensure localStorage cache is read when switching between sub-tabs
             if (currentArtist && allUniqueSongs.length === 0) {
                 const cached = storageClient.getArtist(currentArtist.id);
                 if (cached) {
@@ -968,7 +961,7 @@
             }
 
             if (activeTracksPool.length < 2) {
-                showStatus(`Could not find at least 2 tracks for this selection.`, true, true);
+                showStatus(`Could not find at least 2 tracks for this selection.`, true);
                 return;
             }
 
@@ -980,6 +973,11 @@
             targetMatchupsNeeded = Math.max(5, Math.round(activeTracksPool.length * Math.log2(activeTracksPool.length) * 0.75));
             totalPossiblePairs = (activeTracksPool.length * (activeTracksPool.length - 1)) / 2;
 
+            // Load persisted progress if any
+            const savedProg = storageClient.getUserProgress(currentArtist.id);
+            roundCounter = savedProg.roundCounter;
+            comparedSongPairs = new Set(savedProg.comparedPairs);
+
             hideAllViews();
             document.getElementById('view-elo').classList.remove('hidden');
             updateProgressBars();
@@ -987,14 +985,25 @@
         }
 
         function updateProgressBars() {
-            const percent1 = Math.min(100, Math.round((roundCounter / targetMatchupsNeeded) * 100));
-            document.getElementById('conformanceProgressBar1').style.width = percent1 + '%';
-            document.getElementById('progressPercentage1').textContent = percent1 + '%';
+            const bar1Wrapper = document.getElementById('progressBarWrapper1');
+            const bar2Wrapper = document.getElementById('progressBarWrapper2');
 
-            const uniqueComparedCount = Math.min(totalPossiblePairs, comparedSongPairs.size);
-            const percent2 = totalPossiblePairs > 0 ? Math.min(100, Math.round((uniqueComparedCount / totalPossiblePairs) * 100)) : 0;
-            document.getElementById('conformanceProgressBar2').style.width = percent2 + '%';
-            document.getElementById('progressPercentage2').textContent = percent2 + '%';
+            if (roundCounter <= targetMatchupsNeeded) {
+                // Show only Entry Level Swiper
+                bar1Wrapper.classList.remove('hidden');
+                bar2Wrapper.classList.add('hidden');
+                const percent1 = Math.min(100, Math.round((roundCounter / targetMatchupsNeeded) * 100));
+                document.getElementById('conformanceProgressBar1').style.width = percent1 + '%';
+                document.getElementById('progressPercentage1').textContent = percent1 + '%';
+            } else {
+                // Entry complete -> Hide Bar 1, show Expert Level Swiper
+                bar1Wrapper.classList.add('hidden');
+                bar2Wrapper.classList.remove('hidden');
+                const uniqueComparedCount = Math.min(totalPossiblePairs, comparedSongPairs.size);
+                const percent2 = totalPossiblePairs > 0 ? Math.min(100, Math.round((uniqueComparedCount / totalPossiblePairs) * 100)) : 100;
+                document.getElementById('conformanceProgressBar2').style.width = percent2 + '%';
+                document.getElementById('progressPercentage2').textContent = percent2 + '%';
+            }
         }
 
         function nextMatchup() {
@@ -1032,10 +1041,14 @@
             eloScores[winner.id] = Math.round(Ra + K * (1 - Ea));
             eloScores[loser.id] = Math.round(Rb + K * (0 - Eb));
 
+            roundCounter++;
+
+            // Save ratings, swipe count, and progress immediately
             storageClient.saveUserRatings(currentArtist.id, eloScores);
             storageClient.recordUserSwipe(currentArtist.id, currentArtist.name);
+            storageClient.saveUserProgress(currentArtist.id, roundCounter, comparedSongPairs);
+            updateArtistBannerStats();
 
-            roundCounter++;
             nextMatchup();
 
             try {
@@ -1055,7 +1068,7 @@
 
         function populateStatsDropdown(albums) {
             const select = document.getElementById('statsAlbumSelect');
-            select.innerHTML = '<option value="all">View All Catalog Songs (Full Discography)</option>';
+            select.innerHTML = '<option value="all">Full Discography</option>';
             albums.forEach(alb => {
                 const opt = document.createElement('option');
                 opt.value = alb.id;
@@ -1102,7 +1115,22 @@
 
             if (sortedTracks.length > 0) {
                 document.getElementById('myStatTopSong').textContent = sortedTracks[0].name;
-                document.getElementById('myStatTopAlbum').textContent = sortedTracks[0].albumName;
+                document.getElementById('myStatTopSongImg').src = sortedTracks[0].albumImg || 'https://via.placeholder.com/64';
+            }
+
+            const albumEloMap = {};
+            artistAlbums.forEach(alb => {
+                const albTracks = allUniqueSongs.filter(t => t.albumId === alb.id);
+                if (albTracks.length === 0) return;
+                const totalElo = albTracks.reduce((sum, t) => sum + (savedRatings[t.id] || 1200), 0);
+                const albumImg = alb.images?.[0]?.url || albTracks[0]?.albumImg || 'https://via.placeholder.com/64';
+                albumEloMap[alb.id] = { name: alb.name, avgElo: Math.round(totalElo / albTracks.length), albumImg };
+            });
+
+            const sortedAlbums = Object.values(albumEloMap).sort((a, b) => b.avgElo - a.avgElo);
+            if (sortedAlbums.length > 0) {
+                document.getElementById('myStatTopAlbum').textContent = sortedAlbums[0].name;
+                document.getElementById('myStatTopAlbumImg').src = sortedAlbums[0].albumImg;
             }
 
             const songsContainer = document.getElementById('myOverallSongsList');
@@ -1117,6 +1145,7 @@
                 return `
                     <div class="song-rank-item flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3 transition" data-category="${cat}">
                         <div class="flex items-center gap-3 min-w-0">
+                            <img src="${track.albumImg || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-slate-800" />
                             <span class="font-black text-emerald-400 text-xs w-6 flex-shrink-0">#${idx + 1}</span>
                             <div class="min-w-0">
                                 <div class="font-bold text-white text-sm truncate">${track.name}</div>
@@ -1128,19 +1157,11 @@
                 `;
             }).join('');
 
-            const albumEloMap = {};
-            artistAlbums.forEach(alb => {
-                const albTracks = allUniqueSongs.filter(t => t.albumId === alb.id);
-                if (albTracks.length === 0) return;
-                const totalElo = albTracks.reduce((sum, t) => sum + (savedRatings[t.id] || 1200), 0);
-                albumEloMap[alb.id] = { name: alb.name, avgElo: Math.round(totalElo / albTracks.length) };
-            });
-
-            const sortedAlbums = Object.values(albumEloMap).sort((a, b) => b.avgElo - a.avgElo);
             const albumsContainer = document.getElementById('myOverallAlbumsList');
             albumsContainer.innerHTML = sortedAlbums.map((alb, idx) => `
                 <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
                     <div class="flex items-center gap-3 min-w-0">
+                        <img src="${alb.albumImg}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-slate-800" />
                         <span class="font-black text-emerald-400 text-xs w-6 flex-shrink-0">#${idx + 1}</span>
                         <div class="min-w-0">
                             <div class="font-bold text-white text-sm truncate">${alb.name}</div>
@@ -1186,7 +1207,8 @@
                 const albTracks = allUniqueSongs.filter(t => t.albumId === alb.id);
                 if (albTracks.length === 0) return;
                 const totalElo = albTracks.reduce((sum, t) => sum + (globalSongsMap[t.id]?.elo_rating || 1200), 0);
-                globalAlbumEloMap[alb.id] = { name: alb.name, avgElo: Math.round(totalElo / albTracks.length) };
+                const albumImg = alb.images?.[0]?.url || albTracks[0]?.albumImg || 'https://via.placeholder.com/64';
+                globalAlbumEloMap[alb.id] = { name: alb.name, avgElo: Math.round(totalElo / albTracks.length), albumImg };
             });
 
             const sortedGlobalAlbums = Object.values(globalAlbumEloMap).sort((a, b) => b.avgElo - a.avgElo);
@@ -1198,6 +1220,7 @@
             globalAlbumsContainer.innerHTML = sortedGlobalAlbums.map((alb, idx) => `
                 <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
                     <div class="flex items-center gap-3 min-w-0">
+                        <img src="${alb.albumImg}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-slate-800" />
                         <span class="font-black text-cyan-400 text-xs w-6 flex-shrink-0">#${idx + 1}</span>
                         <div class="min-w-0">
                             <div class="font-bold text-white text-sm truncate">${alb.name}</div>
@@ -1232,6 +1255,7 @@
                 return `
                     <div class="song-rank-item flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3 transition" data-category="${cat}">
                         <div class="flex items-center gap-3 min-w-0">
+                            <img src="${track.albumImg || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-slate-800" />
                             <span class="font-black text-cyan-400 text-xs w-6 flex-shrink-0">#${index + 1}</span>
                             <div class="min-w-0">
                                 <div class="font-bold text-white text-sm truncate">${track.name}</div>
