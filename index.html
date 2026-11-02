@@ -30,7 +30,7 @@
     <header class="bg-slate-900/85 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2 cursor-pointer hover:opacity-90 transition truncate" onclick="showHome()">
-                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.20</span>
+                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.21</span>
             </h1>
             <nav class="flex gap-2 sm:gap-3 items-center">
                 <button onclick="showProfilePage()" class="text-xs sm:text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1"><i class="fa-solid fa-user text-emerald-400 mr-1"></i> Profile</button>
@@ -150,14 +150,18 @@
 
             <h2 class="text-2xl sm:text-3xl font-black text-white">Your User Profile</h2>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
                     <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Votes Made</div>
                     <div id="profileTotalSwipes" class="text-3xl font-black text-emerald-400">0</div>
                 </div>
                 <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Artists Swiped For</div>
-                    <div id="profileArtistCount" class="text-3xl font-black text-cyan-400">0</div>
+                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Top Songs Picked</div>
+                    <div id="profileTopSongsPicked" class="text-3xl font-black text-teal-400">0</div>
+                </div>
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
+                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Bottom Songs Picked</div>
+                    <div id="profileBottomSongsPicked" class="text-3xl font-black text-rose-400">0</div>
                 </div>
             </div>
 
@@ -266,6 +270,7 @@
                     <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-ranking-star text-emerald-400"></i> Album Rankings (Your Tastes)
                     </h4>
+                    <p class="text-xs text-slate-400">*Note: Albums require at least 4 songs to qualify for the leaderboard.</p>
                     <div id="myOverallAlbumsList" class="space-y-2">
                         <p class="text-sm text-slate-400">Complete matchups to rank albums.</p>
                     </div>
@@ -327,6 +332,7 @@
                     <h4 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-globe text-cyan-400"></i> Album Rankings (Community)
                     </h4>
+                    <p class="text-xs text-slate-400">*Note: Albums require at least 4 songs to qualify for the leaderboard.</p>
                     <div id="globalOverallAlbumsList" class="space-y-2">
                         <p class="text-sm text-slate-400">Loading global community data...</p>
                     </div>
@@ -356,9 +362,9 @@
         </div>
 
         <!-- 3. ELO MATCHUP GAME VIEW -->
-        <div id="view-elo" class="view-tab hidden space-y-6 max-w-3xl mx-auto">
+        <div id="view-elo" class="view-tab hidden space-y-4 max-w-2xl mx-auto">
             <div class="flex justify-between items-center">
-                <button onclick="showArtistPage()" class="text-sm font-semibold text-slate-400 hover:text-white flex items-center gap-2 transition">
+                <button onclick="showArtistPage()" class="text-xs font-semibold text-slate-400 hover:text-white flex items-center gap-2 transition">
                     <i class="fa-solid fa-arrow-left"></i> Back to Artist Page
                 </button>
                 <div class="flex items-center gap-2">
@@ -370,60 +376,61 @@
             </div>
 
             <!-- Centered, Tight Sequential Three-Tier Progress Bars -->
-            <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 space-y-2.5 shadow-lg max-w-xl mx-auto w-full">
+            <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 space-y-2 shadow-lg max-w-md mx-auto w-full">
                 <!-- Bar 1: Casual -->
                 <div id="progressBarWrapper1" class="space-y-1">
-                    <div class="flex justify-between items-center text-xs font-semibold">
+                    <div class="flex justify-between items-center text-[11px] font-semibold">
                         <span class="text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                             <i class="fa-solid fa-headphones text-emerald-400"></i> Casual Swiper
                         </span>
                         <span id="progressPercentage1" class="text-emerald-400 font-mono">0%</span>
                     </div>
-                    <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800/80">
-                        <div id="conformanceProgressBar1" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800/80">
+                        <div id="conformanceProgressBar1" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
                     </div>
                 </div>
 
                 <!-- Bar 2: Hardcore -->
                 <div id="progressBarWrapper2" class="hidden space-y-1">
-                    <div class="flex justify-between items-center text-xs font-semibold">
+                    <div class="flex justify-between items-center text-[11px] font-semibold">
                         <span class="text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                             <i class="fa-solid fa-fire text-teal-400"></i> Hardcore Swiper
                         </span>
                         <span id="progressPercentage2" class="text-teal-400 font-mono">0%</span>
                     </div>
-                    <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800/80">
-                        <div id="conformanceProgressBar2" class="bg-gradient-to-r from-teal-400 to-cyan-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800/80">
+                        <div id="conformanceProgressBar2" class="bg-gradient-to-r from-teal-400 to-cyan-500 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
                     </div>
                 </div>
 
                 <!-- Bar 3: Obsessive -->
                 <div id="progressBarWrapper3" class="hidden space-y-1">
-                    <div class="flex justify-between items-center text-xs font-semibold">
+                    <div class="flex justify-between items-center text-[11px] font-semibold">
                         <span class="text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                             <i class="fa-solid fa-award text-cyan-400"></i> Obsessive Swiper
                         </span>
                         <span id="progressPercentage3" class="text-cyan-400 font-mono">0%</span>
                     </div>
-                    <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800/80">
-                        <div id="conformanceProgressBar3" class="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800/80">
+                        <div id="conformanceProgressBar3" class="bg-gradient-to-r from-cyan-500 to-blue-500 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
 
-            <h2 class="text-xl sm:text-2xl font-black text-center text-white">Which track is better?</h2>
+            <!-- Smaller Header Text -->
+            <h3 class="text-sm sm:text-base font-bold text-center text-slate-300">Which track is better?</h3>
 
-            <div id="matchupContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                <div onclick="voteTrack(0)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-3xl p-5 sm:p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-2xl group">
-                    <img id="trackImg0" src="" class="w-36 h-36 sm:w-48 sm:h-48 rounded-2xl object-cover shadow-xl mb-4 group-hover:scale-105 transition duration-300" />
-                    <h3 id="trackName0" class="text-base sm:text-lg font-black text-white mb-1 group-hover:text-emerald-400 transition truncate w-full">Track A</h3>
-                    <p id="trackAlbum0" class="text-xs text-slate-400 font-medium truncate w-full">Album Name</p>
+            <div id="matchupContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div onclick="voteTrack(0)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-3xl p-4 sm:p-5 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-2xl group">
+                    <img id="trackImg0" src="" class="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl object-cover shadow-xl mb-3 group-hover:scale-105 transition duration-300" />
+                    <h3 id="trackName0" class="text-sm sm:text-base font-black text-white mb-0.5 group-hover:text-emerald-400 transition truncate w-full">Track A</h3>
+                    <p id="trackAlbum0" class="text-[11px] text-slate-400 font-medium truncate w-full">Album Name</p>
                 </div>
 
-                <div onclick="voteTrack(1)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-3xl p-5 sm:p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-2xl group">
-                    <img id="trackImg1" src="" class="w-36 h-36 sm:w-48 sm:h-48 rounded-2xl object-cover shadow-xl mb-4 group-hover:scale-105 transition duration-300" />
-                    <h3 id="trackName1" class="text-base sm:text-lg font-black text-white mb-1 group-hover:text-emerald-400 transition truncate w-full">Track B</h3>
-                    <p id="trackAlbum1" class="text-xs text-slate-400 font-medium truncate w-full">Album Name</p>
+                <div onclick="voteTrack(1)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-3xl p-4 sm:p-5 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-2xl group">
+                    <img id="trackImg1" src="" class="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl object-cover shadow-xl mb-3 group-hover:scale-105 transition duration-300" />
+                    <h3 id="trackName1" class="text-sm sm:text-base font-black text-white mb-0.5 group-hover:text-emerald-400 transition truncate w-full">Track B</h3>
+                    <p id="trackAlbum1" class="text-[11px] text-slate-400 font-medium truncate w-full">Album Name</p>
                 </div>
             </div>
         </div>
@@ -431,7 +438,7 @@
     </main>
 
     <script>
-        const APP_VERSION = "v4.20";
+        const APP_VERSION = "v4.21";
         const WORKER_BASE_URL = 'https://songswipe-api.songswipper.workers.dev';
 
         let userId = localStorage.getItem('songswipe_user_id');
@@ -573,8 +580,15 @@
                     let total = parseInt(localStorage.getItem(`songswipe_total_votes_${userId}`) || '0') + 1;
                     localStorage.setItem(`songswipe_total_votes_${userId}`, total.toString());
 
-                    // Record global/recent swipe feeds locally as fallback/cache
                     recordGlobalHomeFeed(artistId, artistName);
+                } catch (err) {}
+            },
+            recordPickedSongs(topCount, bottomCount) {
+                try {
+                    let totalTop = parseInt(localStorage.getItem(`songswipe_top_picked_${userId}`) || '0') + topCount;
+                    let totalBottom = parseInt(localStorage.getItem(`songswipe_bottom_picked_${userId}`) || '0') + bottomCount;
+                    localStorage.setItem(`songswipe_top_picked_${userId}`, totalTop.toString());
+                    localStorage.setItem(`songswipe_bottom_picked_${userId}`, totalBottom.toString());
                 } catch (err) {}
             }
         };
@@ -835,7 +849,6 @@
             let totalSwipes = parseInt(localStorage.getItem(`songswipe_total_votes_${userId}`) || '0');
             let totalSwipers = userId ? 1 : 0;
             let recentArtists = [];
-            let topArtistsMap = {};
 
             try {
                 const res = await fetch(`${WORKER_BASE_URL}/api/global-stats`);
@@ -844,11 +857,9 @@
                     if (data.total_swipes) totalSwipes = Math.max(totalSwipes, data.total_swipes);
                     if (data.total_swipers) totalSwipers = Math.max(totalSwipers, data.total_swipers);
                     if (data.recent_artists) recentArtists = data.recent_artists;
-                    if (data.top_artists) topArtistsMap = data.top_artists;
                 }
             } catch (err) {}
 
-            // Fallback to local storage swiped artists if backend feed is empty
             if (recentArtists.length === 0) {
                 try {
                     recentArtists = JSON.parse(localStorage.getItem('songswipe_global_recent_artists') || '[]');
@@ -908,11 +919,14 @@
 
             try {
                 const totalVotes = parseInt(localStorage.getItem(`songswipe_total_votes_${userId}`) || '0');
+                const totalTopPicked = parseInt(localStorage.getItem(`songswipe_top_picked_${userId}`) || '0');
+                const totalBottomPicked = parseInt(localStorage.getItem(`songswipe_bottom_picked_${userId}`) || '0');
                 const swipedArtistsObj = storageClient.getUserSwipedArtists();
                 const swipedArtistsArr = Object.values(swipedArtistsObj);
 
                 document.getElementById('profileTotalSwipes').textContent = totalVotes;
-                document.getElementById('profileArtistCount').textContent = swipedArtistsArr.length;
+                document.getElementById('profileTopSongsPicked').textContent = totalTopPicked;
+                document.getElementById('profileBottomSongsPicked').textContent = totalBottomPicked;
 
                 const artistListEl = document.getElementById('profileArtistsList');
                 if (swipedArtistsArr.length > 0) {
@@ -1548,7 +1562,8 @@
             artistAlbums.forEach(alb => {
                 if (exclusions.excludedAlbums.includes(alb.id)) return;
                 const albTracks = nonExcludedSongs.filter(t => t.albumId === alb.id);
-                if (albTracks.length === 0) return;
+                // Qualification check: Album must have 4 songs or more
+                if (albTracks.length < 4) return;
                 const totalElo = albTracks.reduce((sum, t) => sum + (savedRatings[t.id] || 1200), 0);
                 const albumImg = alb.images?.[0]?.url || albTracks[0]?.albumImg || 'https://via.placeholder.com/64';
                 albumEloMap[alb.id] = { name: alb.name, avgElo: Math.round(totalElo / albTracks.length), albumImg };
@@ -1576,8 +1591,9 @@
                             <img src="${track.albumImg || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-slate-800" />
                             <span class="font-black text-emerald-400 text-xs w-6 flex-shrink-0">#${idx + 1}</span>
                             <div class="min-w-0">
-                                <div class="font-bold text-white text-sm truncate">${track.name} <span class="text-[11px] font-mono text-slate-400 ml-1">(${rec.wins}W-${rec.losses}L)</span></div>
+                                <div class="font-bold text-white text-sm truncate">${track.name}</div>
                                 <div class="text-xs text-slate-400 mt-0.5 truncate">${track.albumName}</div>
+                                <div class="text-[11px] font-mono text-emerald-400/90 mt-0.5">Record: ${rec.wins}W - ${rec.losses}L</div>
                             </div>
                         </div>
                         <div class="flex-shrink-0">${getEloBadge(elo)}</div>
@@ -1586,18 +1602,22 @@
             }).join('');
 
             const albumsContainer = document.getElementById('myOverallAlbumsList');
-            albumsContainer.innerHTML = cachedSortedAlbums.map((alb, idx) => `
-                <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <img src="${alb.albumImg}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-slate-800" />
-                        <span class="font-black text-emerald-400 text-xs w-6 flex-shrink-0">#${idx + 1}</span>
-                        <div class="min-w-0">
-                            <div class="font-bold text-white text-sm truncate">${alb.name}</div>
+            if (cachedSortedAlbums.length > 0) {
+                albumsContainer.innerHTML = cachedSortedAlbums.map((alb, idx) => `
+                    <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <img src="${alb.albumImg}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-slate-800" />
+                            <span class="font-black text-emerald-400 text-xs w-6 flex-shrink-0">#${idx + 1}</span>
+                            <div class="min-w-0">
+                                <div class="font-bold text-white text-sm truncate">${alb.name}</div>
+                            </div>
                         </div>
+                        <div class="flex-shrink-0">${getEloBadge(alb.avgElo)}</div>
                     </div>
-                    <div class="flex-shrink-0">${getEloBadge(alb.avgElo)}</div>
-                </div>
-            `).join('');
+                `).join('');
+            } else {
+                albumsContainer.innerHTML = `<p class="text-xs text-slate-400">No albums meet the qualification criteria (minimum 4 songs required).</p>`;
+            }
         }
 
         async function renderHotTakes(userRatings, activeSongs) {
@@ -1762,6 +1782,9 @@
             const topSlice = cachedSortedTracks.slice(0, sliceLimit);
             const bottomSlice = cachedSortedTracks.slice(-sliceLimit).reverse();
 
+            // Record picked songs in user profile
+            storageClient.recordPickedSongs(topSlice.length, bottomSlice.length);
+
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             ctx.imageSmoothingEnabled = true;
@@ -1877,7 +1900,8 @@
             const globalAlbumEloMap = {};
             artistAlbums.forEach(alb => {
                 const albTracks = allUniqueSongs.filter(t => t.albumId === alb.id);
-                if (albTracks.length === 0) return;
+                // Qualification check: Album must have 4 songs or more
+                if (albTracks.length < 4) return;
                 const totalElo = albTracks.reduce((sum, t) => sum + (globalSongsMap[t.id]?.elo_rating || 1200), 0);
                 const albumImg = alb.images?.[0]?.url || albTracks[0]?.albumImg || 'https://via.placeholder.com/56';
                 globalAlbumEloMap[alb.id] = { name: alb.name, avgElo: Math.round(totalElo / albTracks.length), albumImg };
@@ -1890,18 +1914,22 @@
             }
 
             const globalAlbumsContainer = document.getElementById('globalOverallAlbumsList');
-            globalAlbumsContainer.innerHTML = sortedGlobalAlbums.map((alb, idx) => `
-                <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <img src="${alb.albumImg}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-slate-800" />
-                        <span class="font-black text-cyan-400 text-xs w-6 flex-shrink-0">#${idx + 1}</span>
-                        <div class="min-w-0">
-                            <div class="font-bold text-white text-sm truncate">${alb.name}</div>
+            if (sortedGlobalAlbums.length > 0) {
+                globalAlbumsContainer.innerHTML = sortedGlobalAlbums.map((alb, idx) => `
+                    <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800/80 gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <img src="${alb.albumImg}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-slate-800" />
+                            <span class="font-black text-cyan-400 text-xs w-6 flex-shrink-0">#${idx + 1}</span>
+                            <div class="min-w-0">
+                                <div class="font-bold text-white text-sm truncate">${alb.name}</div>
+                            </div>
                         </div>
+                        <div class="flex-shrink-0">${getEloBadge(alb.avgElo)}</div>
                     </div>
-                    <div class="flex-shrink-0">${getEloBadge(alb.avgElo)}</div>
-                </div>
-            `).join('');
+                `).join('');
+            } else {
+                globalAlbumsContainer.innerHTML = `<p class="text-xs text-slate-400">No albums meet the qualification criteria (minimum 4 songs required).</p>`;
+            }
 
             let targetTracks = [];
             if (selectedVal === 'all') {
@@ -1933,8 +1961,9 @@
                             <img src="${track.albumImg || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-slate-800" />
                             <span class="font-black text-cyan-400 text-xs w-6 flex-shrink-0">#${index + 1}</span>
                             <div class="min-w-0">
-                                <div class="font-bold text-white text-sm truncate">${track.name} <span class="text-[11px] font-mono text-slate-400 ml-1">(${wins}W-${losses}L)</span></div>
+                                <div class="font-bold text-white text-sm truncate">${track.name}</div>
                                 <div class="text-xs text-slate-400 mt-0.5 truncate">${track.albumName}</div>
+                                <div class="text-[11px] font-mono text-cyan-400/90 mt-0.5">Record: ${wins}W - ${losses}L</div>
                             </div>
                         </div>
                         <div class="flex-shrink-0">${getEloBadge(eloRating)}</div>
