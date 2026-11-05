@@ -17,6 +17,10 @@
         html {
             scroll-behavior: smooth;
         }
+        .swipe-card {
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            touch-action: none;
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950 overflow-x-hidden">
@@ -30,7 +34,7 @@
     <header class="bg-slate-900/85 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2 cursor-pointer hover:opacity-90 transition truncate" onclick="showHome()">
-                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.25</span>
+                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.27</span>
             </h1>
             <nav class="flex gap-2 sm:gap-3 items-center">
                 <button onclick="showProfilePage()" class="text-xs sm:text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1"><i class="fa-solid fa-user text-emerald-400 mr-1"></i> Profile</button>
@@ -394,11 +398,24 @@
                     <i class="fa-solid fa-arrow-left"></i> Back to Artist Page
                 </button>
                 <div class="flex items-center gap-2">
+                    <button onclick="openCurateAllSongs()" class="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-sliders"></i> Change included songs
+                    </button>
                     <button id="undoBtn" onclick="undoLastVote()" class="hidden text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-xl transition items-center gap-1.5 shadow">
                         <i class="fa-solid fa-rotate-left"></i> Undo
                     </button>
                     <span id="matchupCount" class="text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-full">Matchup 1</span>
                 </div>
+            </div>
+
+            <!-- Mobile-Only Point / Swipe Toggle Switch (Visible only on screens <= 640px) -->
+            <div id="mobileModeToggleWrapper" class="block sm:hidden max-w-xs mx-auto bg-slate-900 border border-slate-800 rounded-full p-1 flex shadow-md">
+                <button id="modeTogglePoint" onclick="setRankingMode('point')" class="flex-1 py-1.5 rounded-full text-xs font-bold transition bg-emerald-500 text-slate-950 shadow">
+                    <i class="fa-solid fa-hand-pointer mr-1"></i> Point
+                </button>
+                <button id="modeToggleSwipe" onclick="setRankingMode('swipe')" class="flex-1 py-1.5 rounded-full text-xs font-bold transition text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-hand-fist mr-1"></i> Swipe
+                </button>
             </div>
 
             <!-- Centered, Tight Sequential Three-Tier Progress Bars -->
@@ -444,19 +461,19 @@
             </div>
 
             <!-- Smaller Header Text -->
-            <h3 class="text-sm sm:text-base font-bold text-center text-slate-300">Which track is better?</h3>
+            <h3 class="text-sm sm:text-base font-bold text-center text-slate-300" id="matchupInstructionText">Which track is better?</h3>
 
             <div id="matchupContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div onclick="voteTrack(0)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-3xl p-4 sm:p-5 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-2xl group">
-                    <img id="trackImg0" src="" class="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl object-cover shadow-xl mb-3 group-hover:scale-105 transition duration-300" />
-                    <h3 id="trackName0" class="text-sm sm:text-base font-black text-white mb-0.5 group-hover:text-emerald-400 transition truncate w-full">Track A</h3>
-                    <p id="trackAlbum0" class="text-[11px] text-slate-400 font-medium truncate w-full">Album Name</p>
+                <div id="matchupCard0" onclick="handleCardClick(0)" class="swipe-card bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-3xl p-4 sm:p-5 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-2xl group">
+                    <img id="trackImg0" src="" class="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl object-cover shadow-xl mb-3 group-hover:scale-105 transition duration-300 pointer-events-none" />
+                    <h3 id="trackName0" class="text-sm sm:text-base font-black text-white mb-0.5 group-hover:text-emerald-400 transition truncate w-full pointer-events-none">Track A</h3>
+                    <p id="trackAlbum0" class="text-[11px] text-slate-400 font-medium truncate w-full pointer-events-none">Album Name</p>
                 </div>
 
-                <div onclick="voteTrack(1)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-3xl p-4 sm:p-5 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-2xl group">
-                    <img id="trackImg1" src="" class="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl object-cover shadow-xl mb-3 group-hover:scale-105 transition duration-300" />
-                    <h3 id="trackName1" class="text-sm sm:text-base font-black text-white mb-0.5 group-hover:text-emerald-400 transition truncate w-full">Track B</h3>
-                    <p id="trackAlbum1" class="text-[11px] text-slate-400 font-medium truncate w-full">Album Name</p>
+                <div id="matchupCard1" onclick="handleCardClick(1)" class="swipe-card bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-3xl p-4 sm:p-5 flex flex-col items-center text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-2xl group">
+                    <img id="trackImg1" src="" class="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl object-cover shadow-xl mb-3 group-hover:scale-105 transition duration-300 pointer-events-none" />
+                    <h3 id="trackName1" class="text-sm sm:text-base font-black text-white mb-0.5 group-hover:text-emerald-400 transition truncate w-full pointer-events-none">Track B</h3>
+                    <p id="trackAlbum1" class="text-[11px] text-slate-400 font-medium truncate w-full pointer-events-none">Album Name</p>
                 </div>
             </div>
         </div>
@@ -464,7 +481,7 @@
     </main>
 
     <script>
-        const APP_VERSION = "v4.25";
+        const APP_VERSION = "v4.27";
         const WORKER_BASE_URL = 'https://songswipe-api.songswipper.workers.dev';
 
         let userId = localStorage.getItem('songswipe_user_id');
@@ -676,6 +693,7 @@
         let selectedAlbumAccordionId = null;
         let selectedCurateAccordionId = null;
 
+        let rankingMode = 'point'; // 'point' or 'swipe'
         let lastVoteState = null;
         let hasUndoneLast = false;
 
@@ -1370,6 +1388,23 @@
             }
         }
 
+        function setRankingMode(mode) {
+            rankingMode = mode;
+            const btnPoint = document.getElementById('modeTogglePoint');
+            const btnSwipe = document.getElementById('modeToggleSwipe');
+            const instructionText = document.getElementById('matchupInstructionText');
+
+            if (mode === 'point') {
+                btnPoint.className = "flex-1 py-1.5 rounded-full text-xs font-bold transition bg-emerald-500 text-slate-950 shadow";
+                btnSwipe.className = "flex-1 py-1.5 rounded-full text-xs font-bold transition text-slate-400 hover:text-white";
+                instructionText.textContent = "Which track is better?";
+            } else {
+                btnSwipe.className = "flex-1 py-1.5 rounded-full text-xs font-bold transition bg-emerald-500 text-slate-950 shadow";
+                btnPoint.className = "flex-1 py-1.5 rounded-full text-xs font-bold transition text-slate-400 hover:text-white";
+                instructionText.textContent = "Swipe up or down on your preferred track to pick it!";
+            }
+        }
+
         async function startEloRanking(mode, albumId = null) {
             hideStatus();
             activeTracksPool = [];
@@ -1472,6 +1507,13 @@
 
             currentMatchup = [activeTracksPool[idx1], activeTracksPool[idx2]];
 
+            const card0 = document.getElementById('matchupCard0');
+            const card1 = document.getElementById('matchupCard1');
+            card0.style.transform = 'translateY(0px)';
+            card1.style.transform = 'translateY(0px)';
+            card0.style.opacity = '1';
+            card1.style.opacity = '1';
+
             document.getElementById('trackImg0').src = currentMatchup[0].albumImg || 'https://via.placeholder.com/150';
             document.getElementById('trackName0').textContent = currentMatchup[0].name;
             document.getElementById('trackAlbum0').textContent = currentMatchup[0].albumName;
@@ -1480,6 +1522,63 @@
             document.getElementById('trackName1').textContent = currentMatchup[1].name;
             document.getElementById('trackAlbum1').textContent = currentMatchup[1].albumName;
         }
+
+        function handleCardClick(idx) {
+            if (rankingMode === 'point') {
+                voteTrack(idx);
+            }
+        }
+
+        // Touch & Swipe Event Handlers for Mobile Swipe Mode
+        let touchCardIdx = null;
+        let touchStartY = 0;
+        let currentDeltaY = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            if (rankingMode !== 'swipe') return;
+            const card0 = document.getElementById('matchupCard0');
+            const card1 = document.getElementById('matchupCard1');
+            
+            if (card0.contains(e.target)) {
+                touchCardIdx = 0;
+                touchStartY = e.touches[0].clientY;
+            } else if (card1.contains(e.target)) {
+                touchCardIdx = 1;
+                touchStartY = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchmove', (e) => {
+            if (touchCardIdx === null || rankingMode !== 'swipe') return;
+            currentDeltaY = e.touches[0].clientY - touchStartY;
+            const card = document.getElementById(`matchupCard${touchCardIdx}`);
+            card.style.transform = `translateY(${currentDeltaY}px)`;
+            card.style.opacity = `${Math.max(0.3, 1 - Math.abs(currentDeltaY) / 300)}`;
+        }, { passive: true });
+
+        document.addEventListener('touchend', (e) => {
+            if (touchCardIdx === null || rankingMode !== 'swipe') return;
+            const card = document.getElementById(`matchupCard${touchCardIdx}`);
+            
+            if (Math.abs(currentDeltaY) > 80) {
+                // Swiped off screen
+                const direction = currentDeltaY > 0 ? 1 : -1;
+                card.style.transform = `translateY(${direction * 400}px)`;
+                card.style.opacity = '0';
+                
+                setTimeout(() => {
+                    voteTrack(touchCardIdx);
+                    touchCardIdx = null;
+                    currentDeltaY = 0;
+                }, 150);
+            } else {
+                // Snap back
+                card.style.transform = 'translateY(0px)';
+                card.style.opacity = '1';
+                touchCardIdx = null;
+                currentDeltaY = 0;
+            }
+        });
 
         async function voteTrack(winnerIdx) {
             const winner = currentMatchup[winnerIdx];
