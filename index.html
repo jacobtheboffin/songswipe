@@ -34,7 +34,7 @@
     <header class="bg-slate-900/85 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2 cursor-pointer hover:opacity-90 transition truncate" onclick="showHome()">
-                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.27</span>
+                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v4.29</span>
             </h1>
             <nav class="flex gap-2 sm:gap-3 items-center">
                 <button onclick="showProfilePage()" class="text-xs sm:text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1"><i class="fa-solid fa-user text-emerald-400 mr-1"></i> Profile</button>
@@ -190,14 +190,14 @@
 
             <!-- TAB: RANK OPTIONS -->
             <div id="artistTab-rank" class="space-y-6">
-                <!-- Option 1: Rank All Songs (Loads Curation Screen) -->
-                <div onclick="openCurateAllSongs()" class="bg-gradient-to-r from-slate-900 to-slate-850 p-4 sm:p-5 rounded-2xl border border-slate-800 hover:border-emerald-500/60 cursor-pointer transition transform hover:-translate-y-0.5 shadow-xl flex items-center justify-between group">
+                <!-- Option 1: Rank All Songs -->
+                <div onclick="handleRankAllClick()" class="bg-gradient-to-r from-slate-900 to-slate-850 p-4 sm:p-5 rounded-2xl border border-slate-800 hover:border-emerald-500/60 cursor-pointer transition transform hover:-translate-y-0.5 shadow-xl flex items-center justify-between group">
                     <div class="flex items-center gap-4 sm:gap-5 min-w-0">
                         <div class="bg-emerald-500/10 p-2.5 sm:p-3 rounded-xl text-emerald-400 text-xl group-hover:scale-110 transition border border-emerald-500/20 flex-shrink-0">
                             <i class="fa-solid fa-bolt"></i>
                         </div>
                         <div class="min-w-0">
-                            <h4 class="font-bold text-base sm:text-lg text-white group-hover:text-emerald-400 transition truncate">Rank All Songs</h4>
+                            <h4 id="rankAllCardTitle" class="font-bold text-base sm:text-lg text-white group-hover:text-emerald-400 transition truncate">Start Ranking!</h4>
                             <p class="text-xs text-slate-400 truncate mt-0.5">Customize your pool or swipe the full discography</p>
                         </div>
                     </div>
@@ -376,8 +376,14 @@
                 <span class="text-xs font-mono text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">Full Discography Pool</span>
             </div>
 
-            <div class="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl text-center space-y-2">
-                <h3 class="text-xl sm:text-2xl font-black text-white">Customize Your Discography</h3>
+            <!-- Top Start Ranking Action (Always available in Curation Screen) -->
+            <div>
+                <button id="curateTopStartBtn" onclick="startEloRanking('all')" class="w-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black py-4 rounded-2xl text-base sm:text-lg transition shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-3 transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-play"></i> <span id="curateTopStartBtnText">Start Ranking!</span>
+                </button>
+            </div>
+
+            <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl shadow-xl text-center">
                 <p class="text-sm text-slate-300 font-medium">Remove any albums or songs you don't want or know.</p>
             </div>
 
@@ -385,8 +391,8 @@
 
             <!-- Bottom Start Ranking Action -->
             <div class="pt-4 pb-8">
-                <button onclick="startEloRanking('all')" class="w-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black py-5 rounded-2xl text-lg sm:text-xl transition shadow-2xl shadow-emerald-500/25 flex items-center justify-center gap-3 transform hover:-translate-y-0.5">
-                    <i class="fa-solid fa-play text-xl"></i> Start Ranking!
+                <button id="curateBottomStartBtn" onclick="startEloRanking('all')" class="w-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black py-5 rounded-2xl text-lg sm:text-xl transition shadow-2xl shadow-emerald-500/25 flex items-center justify-center gap-3 transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-play text-xl"></i> <span id="curateBottomStartBtnText">Start Ranking!</span>
                 </button>
             </div>
         </div>
@@ -404,11 +410,10 @@
                     <button id="undoBtn" onclick="undoLastVote()" class="hidden text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-xl transition items-center gap-1.5 shadow">
                         <i class="fa-solid fa-rotate-left"></i> Undo
                     </button>
-                    <span id="matchupCount" class="text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-full">Matchup 1</span>
                 </div>
             </div>
 
-            <!-- Mobile-Only Point / Swipe Toggle Switch (Visible only on screens <= 640px) -->
+            <!-- Mobile-Only Point / Swipe Toggle Switch -->
             <div id="mobileModeToggleWrapper" class="block sm:hidden max-w-xs mx-auto bg-slate-900 border border-slate-800 rounded-full p-1 flex shadow-md">
                 <button id="modeTogglePoint" onclick="setRankingMode('point')" class="flex-1 py-1.5 rounded-full text-xs font-bold transition bg-emerald-500 text-slate-950 shadow">
                     <i class="fa-solid fa-hand-pointer mr-1"></i> Point
@@ -481,7 +486,7 @@
     </main>
 
     <script>
-        const APP_VERSION = "v4.27";
+        const APP_VERSION = "v4.29";
         const WORKER_BASE_URL = 'https://songswipe-api.songswipper.workers.dev';
 
         let userId = localStorage.getItem('songswipe_user_id');
@@ -1029,6 +1034,15 @@
             const personalSwipes = storageClient.getArtistSwipes(currentArtist.id);
             const swiperEl = document.getElementById('bannerSwipesCount');
             if (swiperEl) swiperEl.textContent = personalSwipes.toLocaleString();
+
+            const titleEl = document.getElementById('rankAllCardTitle');
+            const curateTopText = document.getElementById('curateTopStartBtnText');
+            const curateBottomText = document.getElementById('curateBottomStartBtnText');
+
+            const labelText = personalSwipes > 0 ? "Resume Ranking" : "Start Ranking!";
+            if (titleEl) titleEl.textContent = labelText;
+            if (curateTopText) curateTopText.textContent = labelText;
+            if (curateBottomText) curateBottomText.textContent = labelText;
         }
 
         let searchDebounceTimeout = null;
@@ -1117,6 +1131,8 @@
                 const totalSwipers = Math.max(globalStats.total_rankers || 0, personalArtistSwipes > 0 ? 1 : 0).toLocaleString();
                 const imageUrl = artist.images && artist.images.length > 0 ? artist.images[0].url : 'https://via.placeholder.com/150';
                 
+                const rankButtonText = personalArtistSwipes > 0 ? "Resume Ranking" : "Start Ranking!";
+
                 document.getElementById('artistBanner').innerHTML = `
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
                         <div class="flex items-center gap-4 sm:gap-5 w-full sm:w-auto min-w-0">
@@ -1138,6 +1154,10 @@
                         </button>
                     </div>
                 `;
+
+                document.getElementById('rankAllCardTitle').textContent = rankButtonText;
+                document.getElementById('curateTopStartBtnText').textContent = rankButtonText;
+                document.getElementById('curateBottomStartBtnText').textContent = rankButtonText;
 
                 let isTimedOut = false;
                 const watchdogTimer = setTimeout(() => {
@@ -1221,6 +1241,17 @@
                 `;
                 container.appendChild(card);
             });
+        }
+
+        // Handle Rank All Click (Direct Elo if already swiped, Curation if first time)
+        function handleRankAllClick() {
+            if (!currentArtist || allUniqueSongs.length === 0) return;
+            const personalSwipes = storageClient.getArtistSwipes(currentArtist.id);
+            if (personalSwipes > 0) {
+                startEloRanking('all');
+            } else {
+                openCurateAllSongs();
+            }
         }
 
         // Open Curation Screen for Rank All Songs
@@ -1401,7 +1432,7 @@
             } else {
                 btnSwipe.className = "flex-1 py-1.5 rounded-full text-xs font-bold transition bg-emerald-500 text-slate-950 shadow";
                 btnPoint.className = "flex-1 py-1.5 rounded-full text-xs font-bold transition text-slate-400 hover:text-white";
-                instructionText.textContent = "Swipe up or down on your preferred track to pick it!";
+                instructionText.textContent = "Swipe up for win, swipe down for loss!";
             }
         }
 
@@ -1482,7 +1513,6 @@
         }
 
         function nextMatchup() {
-            document.getElementById('matchupCount').textContent = `Matchup ${roundCounter}`;
             updateProgressBars();
 
             let idx1, idx2, pairKey;
@@ -1561,18 +1591,19 @@
             const card = document.getElementById(`matchupCard${touchCardIdx}`);
             
             if (Math.abs(currentDeltaY) > 80) {
-                // Swiped off screen
+                const isSwipeUp = currentDeltaY < 0;
+                const winnerIdx = isSwipeUp ? touchCardIdx : (touchCardIdx === 0 ? 1 : 0);
+
                 const direction = currentDeltaY > 0 ? 1 : -1;
                 card.style.transform = `translateY(${direction * 400}px)`;
                 card.style.opacity = '0';
                 
                 setTimeout(() => {
-                    voteTrack(touchCardIdx);
+                    voteTrack(winnerIdx);
                     touchCardIdx = null;
                     currentDeltaY = 0;
                 }, 150);
             } else {
-                // Snap back
                 card.style.transform = 'translateY(0px)';
                 card.style.opacity = '1';
                 touchCardIdx = null;
@@ -1670,7 +1701,6 @@
             storageClient.saveUserProgress(currentArtist.id, roundCounter, comparedSongPairs);
             updateArtistBannerStats();
 
-            document.getElementById('matchupCount').textContent = `Matchup ${roundCounter}`;
             document.getElementById('trackImg0').src = currentMatchup[0].albumImg || 'https://via.placeholder.com/150';
             document.getElementById('trackName0').textContent = currentMatchup[0].name;
             document.getElementById('trackAlbum0').textContent = currentMatchup[0].albumName;
