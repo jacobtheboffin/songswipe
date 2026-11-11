@@ -497,6 +497,9 @@
                 <p class="text-xs text-slate-400">Sign in to save your rankings and sync across all devices.</p>
             </div>
 
+            <!-- Add inside #authModal right before the form buttons -->
+            <div id="authModalError" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium"></div>
+
             <!-- Social Providers (Google) -->
             <div class="space-y-2">
                 <button onclick="handleGoogleSignIn()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow">
@@ -543,6 +546,22 @@
             userId = 'user_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             localStorage.setItem('songswipe_user_id', userId);
         }
+        function showAuthError(message) {
+    const errorBox = document.getElementById('authModalError');
+    if (errorBox) {
+        errorBox.textContent = message;
+        errorBox.classList.remove('hidden');
+    }
+    showStatus(message, true); // Also surfaces it on the main status banner
+}
+
+    function clearAuthError() {
+        const errorBox = document.getElementById('authModalError');
+        if (errorBox) {
+            errorBox.textContent = '';
+            errorBox.classList.add('hidden');
+        }
+    }
 
         // Real Firebase Client Initialization Hook (Configure with your project credentials)
         let firebaseAuth = null;
@@ -731,96 +750,36 @@
         function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
 
         // Real Firebase Authentication Handlers
-        async function handleGoogleSignIn() {
-            if (!firebaseAuth) {
-                showStatus("Firebase SDK is not configured yet. Using mock auth placeholder.", false);
-                await mockAuthFallback("google.com");
-                return;
-            }
-            try {
-                const { signInWithPopup, GoogleAuthProvider } = window.FB_MODULES;
-                const provider = new GoogleAuthProvider();
-                const result = await signInWithPopup(firebaseAuth, provider);
-                userEmail = result.user.email;
-                userId = result.user.uid;
-                localStorage.setItem('songswipe_user_email', userEmail);
-                localStorage.setItem('songswipe_user_id', userId);
-                updateNavAuthDisplay();
-                closeAuthModal();
-                showStatus(`Signed in successfully as ${userEmail}`);
-            } catch (err) {
-                showStatus(err.message, true);
-            }
-        }
-
-        async function handleEmailSignUp() {
-            const email = document.getElementById('authEmailInput').value.trim();
-            const password = document.getElementById('authPasswordInput').value;
-            if (!email || !password) {
-                showStatus("Please enter a valid email and password.", true);
-                return;
-            }
-            if (!firebaseAuth) {
-                await mockAuthFallback(email);
-                return;
-            }
-            try {
-                const { createUserWithEmailAndPassword } = window.FB_MODULES;
-                const result = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-                userEmail = result.user.email;
-                userId = result.user.uid;
-                localStorage.setItem('songswipe_user_email', userEmail);
-                localStorage.setItem('songswipe_user_id', userId);
-                updateNavAuthDisplay();
-                closeAuthModal();
-                showStatus(`Account created successfully for ${userEmail}!`);
-            } catch (err) {
-                showStatus(err.message, true);
-            }
-        }
-
         async function handleEmailSignIn() {
-            const email = document.getElementById('authEmailInput').value.trim();
-            const password = document.getElementById('authPasswordInput').value;
-            if (!email || !password) {
-                showStatus("Please enter your email and password.", true);
-                return;
-            }
-            if (!firebaseAuth) {
-                await mockAuthFallback(email);
-                return;
-            }
-            try {
-                const { signInWithEmailAndPassword } = window.FB_MODULES;
-                const result = await signInWithEmailAndPassword(firebaseAuth, email, password);
-                userEmail = result.user.email;
-                userId = result.user.uid;
-                localStorage.setItem('songswipe_user_email', userEmail);
-                localStorage.setItem('songswipe_user_id', userId);
-                updateNavAuthDisplay();
-                closeAuthModal();
-                showStatus(`Welcome back, ${userEmail}!`);
-            } catch (err) {
-                showStatus(err.message, true);
-            }
-        }
+    clearAuthError();
+    const email = document.getElementById('authEmailInput').value.trim();
+    const password = document.getElementById('authPasswordInput').value;
+    
+    if (!email || !password) {
+        showAuthError("Please enter your email and password.");
+        return;
+    }
+    
+    if (!firebaseAuth) {
+        showAuthError("Firebase is not initialized. Please update your API key configuration.");
+        return;
+    }
 
-        async function mockAuthFallback(emailOrId) {
-            showGlobalLoading(true, "Connecting to Cloud Authentication...");
-            await new Promise(r => setTimeout(r, 800));
-            userEmail = emailOrId.includes('@') ? emailOrId : `user_${Math.random().toString(36).substring(7)}@auth.com`;
-            localStorage.setItem('songswipe_user_email', userEmail);
-            updateNavAuthDisplay();
-            showGlobalLoading(false);
-            closeAuthModal();
-            showStatus(`Successfully signed in as ${userEmail}!`);
-        }
-
-        function updateNavAuthDisplay() {
-            const label = document.getElementById('navAuthLabel');
-            if (userEmail) label.textContent = userEmail.split('@')[0];
-            else label.textContent = "Sign In / Account";
-        }
+    try {
+        const { signInWithEmailAndPassword } = window.FB_MODULES;
+        const result = await signInWithEmailAndPassword(firebaseAuth, email, password);
+        userEmail = result.user.email;
+        userId = result.user.uid;
+        localStorage.setItem('songswipe_user_email', userEmail);
+        localStorage.setItem('songswipe_user_id', userId);
+        updateNavAuthDisplay();
+        closeAuthModal();
+        showStatus(`Welcome back, ${userEmail}!`);
+    } catch (err) {
+        // Catches 'Firebase: Error (auth/api-key-not-valid...)' and prints to modal popup
+        showAuthError(err.message);
+    }
+}
 
         let currentArtist = null;
         let artistAlbums = [];
