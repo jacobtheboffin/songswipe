@@ -3,16 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SongSwipe v5.0 - Account Authentication & Global Rankings</title>
+    <title>SongSwipe v5.1 - Secure Accounts & Ranker Tiers</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase SDK Scripts for Real Authentication Setup -->
+    <!-- Firebase SDK Scripts for Real Authentication & Verification Setup -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            signInWithPopup, 
+            GoogleAuthProvider, 
+            signOut, 
+            onAuthStateChanged,
+            sendEmailVerification,
+            updateProfile,
+            reload
+        } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
         
-        // Expose Firebase modules globally for UI handlers
-        window.FB_MODULES = { initializeApp, getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged };
+        window.FB_MODULES = { 
+            initializeApp, 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            signInWithPopup, 
+            GoogleAuthProvider, 
+            signOut, 
+            onAuthStateChanged,
+            sendEmailVerification,
+            updateProfile,
+            reload
+        };
     </script>
     <style>
         @keyframes smoothShimmer {
@@ -42,13 +64,15 @@
     <header class="bg-slate-900/85 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2 cursor-pointer hover:opacity-90 transition truncate" onclick="showHome()">
-                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v5.0</span>
+                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v5.1</span>
             </h1>
             <nav class="flex gap-2 sm:gap-3 items-center">
-                <button onclick="showAuthModal()" id="navAuthBtn" class="text-xs sm:text-sm font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
+                <button onclick="showAuthModal('signin')" id="navAuthBtn" class="text-xs sm:text-sm font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
                     <i class="fa-solid fa-user-lock"></i> <span id="navAuthLabel">Sign In / Account</span>
                 </button>
-                <button onclick="showProfilePage()" class="text-xs sm:text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1"><i class="fa-solid fa-user text-emerald-400 mr-1"></i> Profile</button>
+                <button onclick="showProfilePage()" class="text-xs sm:text-sm font-semibold hover:text-emerald-400 text-slate-300 transition px-2 py-1 flex items-center gap-1">
+                    <i class="fa-solid fa-user text-emerald-400"></i> <span id="navProfileName">Account</span>
+                </button>
                 <button onclick="downloadDebugLog()" class="hidden sm:flex text-xs bg-slate-800/80 hover:bg-slate-700/80 px-2.5 py-1.5 rounded-lg border border-slate-700/60 text-slate-300 transition items-center gap-1 font-medium">
                     <i class="fa-solid fa-download text-emerald-400"></i> Log
                 </button>
@@ -151,29 +175,60 @@
             </div>
         </div>
 
-        <!-- 1.5 USER PROFILE VIEW -->
+        <!-- 1.5 USER PROFILE & ACCOUNT VIEW -->
         <div id="view-profile" class="view-tab hidden space-y-6 max-w-3xl mx-auto">
             <div class="flex justify-between items-center">
                 <button onclick="showHome()" class="text-sm font-semibold text-slate-400 hover:text-white flex items-center gap-2 transition">
                     <i class="fa-solid fa-arrow-left"></i> Back to Home
                 </button>
-                <span class="text-xs font-mono text-slate-500 truncate max-w-[180px]">User ID: <span id="profileUserIdDisplay"></span></span>
+                <span class="text-xs font-mono text-slate-500 truncate max-w-[200px]">Public Handle ID: <span id="profileUserIdDisplay"></span></span>
             </div>
 
-            <h2 class="text-2xl sm:text-3xl font-black text-white">Your User Profile & Account Settings</h2>
+            <h2 class="text-2xl sm:text-3xl font-black text-white">Your Account & Ranker Profile</h2>
 
-            <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 shadow-xl space-y-4">
-                <div class="flex items-center justify-between">
+            <!-- Account Identity & Display Name Editor -->
+            <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 shadow-xl space-y-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
                     <div>
-                        <h4 class="font-bold text-white text-base">Cloud Account Status</h4>
-                        <p id="profileAccountEmail" class="text-xs text-slate-400 mt-0.5">Signed in as Guest (Anonymous ID)</p>
+                        <div class="flex items-center gap-2">
+                            <h4 class="font-bold text-white text-base">Account Status</h4>
+                            <span id="profileVerificationBadge" class="hidden text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Verified</span>
+                        </div>
+                        <p id="profileAccountStatusText" class="text-xs text-slate-400 mt-1">Guest Session (Local Device Storage)</p>
+                        <p class="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-shield-halved text-emerald-400"></i> Privacy Active: Your email is never visible to admins or other users, and passwords are one-way hashed.
+                        </p>
                     </div>
-                    <button onclick="showAuthModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition shadow">
-                        Manage Account
-                    </button>
+                    <div class="flex gap-2 flex-shrink-0">
+                        <button id="profileManageAuthBtn" onclick="showAuthModal('signup')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition shadow">
+                            Create Account / Sign In
+                        </button>
+                        <button id="profileSignOutBtn" onclick="handleSignOut()" class="hidden bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-slate-700 font-bold px-4 py-2 rounded-xl text-xs transition">
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Editable Display Name -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Public Display Name</label>
+                    <div class="flex gap-2">
+                        <input 
+                            type="text" 
+                            id="profileDisplayNameInput" 
+                            maxlength="30"
+                            placeholder="User 12345" 
+                            class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500"
+                        />
+                        <button onclick="saveDisplayName()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition shadow flex items-center gap-1.5 flex-shrink-0">
+                            <i class="fa-solid fa-check"></i> Save Name
+                        </button>
+                    </div>
+                    <div id="profileMetaTags" class="flex flex-wrap gap-2 pt-1 text-xs text-slate-400"></div>
                 </div>
             </div>
 
+            <!-- Overall Stats -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl">
                     <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Votes Made</div>
@@ -189,10 +244,14 @@
                 </div>
             </div>
 
+            <!-- Artists Ranked & Ranker Levels -->
             <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3 shadow-xl">
-                <h4 class="text-base sm:text-lg font-bold text-white">Artists You've Swiped For</h4>
-                <div id="profileArtistsList" class="space-y-2">
-                    <p class="text-sm text-slate-400">No artists swiped yet.</p>
+                <div class="flex items-center justify-between">
+                    <h4 class="text-base sm:text-lg font-bold text-white">Artists Ranked & Ranker Levels</h4>
+                    <span class="text-[11px] text-slate-400">Tiers: Casual • Hardcore • Obsessive</span>
+                </div>
+                <div id="profileArtistsList" class="space-y-2.5">
+                    <p class="text-sm text-slate-400">No artists ranked yet.</p>
                 </div>
             </div>
         </div>
@@ -482,54 +541,116 @@
 
     </main>
 
-    <!-- REAL AUTHENTICATION MODAL -->
-    <div id="authModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 relative">
+    <!-- REAL AUTHENTICATION & REGISTRATION MODAL -->
+    <div id="authModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 relative my-8">
             <button onclick="closeAuthModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white transition">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
 
-            <div class="text-center space-y-2">
+            <div class="text-center space-y-1.5">
                 <div class="inline-flex p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 text-2xl border border-emerald-500/20">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <i class="fa-solid fa-user-shield"></i>
                 </div>
-                <h3 id="authModalTitle" class="text-xl font-black text-white">SongSwipe Account Cloud</h3>
-                <p class="text-xs text-slate-400">Sign in to save your rankings and sync across all devices.</p>
+                <h3 id="authModalTitle" class="text-xl font-black text-white">Create Your Account</h3>
+                <p id="authModalSubtitle" class="text-xs text-slate-400">Encrypted credentials & email verification. Your email is never exposed publicly or to admins.</p>
             </div>
 
-            <!-- Add inside #authModal right before the form buttons -->
-            <div id="authModalError" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium"></div>
+            <!-- Mode Switcher Tabs -->
+            <div id="authModeTabs" class="grid grid-cols-2 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-bold">
+                <button id="authTabSignUp" onclick="setAuthModalMode('signup')" class="py-2 rounded-lg bg-emerald-500 text-slate-950 transition">Create Account</button>
+                <button id="authTabSignIn" onclick="setAuthModalMode('signin')" class="py-2 rounded-lg text-slate-400 hover:text-white transition">Sign In</button>
+            </div>
 
-            <!-- Social Providers (Google) -->
-            <div class="space-y-2">
-                <button onclick="handleGoogleSignIn()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow">
-                    <i class="fa-brands fa-google text-red-400 text-base"></i> Continue with Google
+            <div id="authModalError" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium"></div>
+            <div id="authModalSuccess" class="hidden p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium"></div>
+
+            <!-- Step 1: Sign Up / Sign In Form -->
+            <div id="authFormContainer" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1">Email Address <span class="text-rose-400">*</span></label>
+                    <input type="email" id="authEmailInput" placeholder="name@example.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1">Password <span class="text-rose-400">*</span></label>
+                    <input type="password" id="authPasswordInput" placeholder="Minimum 8 characters" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500" />
+                </div>
+
+                <!-- Sign-Up Only Fields -->
+                <div id="signUpOnlyFields" class="space-y-3.5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 mb-1">Confirm Password <span class="text-rose-400">*</span></label>
+                        <input type="password" id="authConfirmPasswordInput" placeholder="Re-enter password" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500" />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 mb-1">Home Country <span class="text-slate-500 font-normal">(Optional)</span></label>
+                        <select id="authCountrySelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-emerald-500">
+                            <option value="">Prefer not to say / Select country...</option>
+                            <option value="CA">Canada</option>
+                            <option value="US">United States</option>
+                            <option value="GB">United Kingdom</option>
+                            <option value="AU">Australia</option>
+                            <option value="NZ">New Zealand</option>
+                            <option value="DE">Germany</option>
+                            <option value="FR">France</option>
+                            <option value="NL">Netherlands</option>
+                            <option value="SE">Sweden</option>
+                            <option value="NO">Norway</option>
+                            <option value="JP">Japan</option>
+                            <option value="KR">South Korea</option>
+                            <option value="BR">Brazil</option>
+                            <option value="MX">Mexico</option>
+                            <option value="IN">India</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+
+                    <label class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-950/70 border border-slate-800 cursor-pointer select-none">
+                        <input type="checkbox" id="authAgeConfirmCheckbox" class="mt-0.5 rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-emerald-500" />
+                        <span class="text-xs text-slate-300 leading-snug">
+                            I confirm that I am <strong>16 years of age or older</strong>. <span class="text-rose-400">*</span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="pt-1">
+                    <button id="authSubmitBtn" onclick="submitAuthForm()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-xl text-sm transition shadow-lg">
+                        Create Account & Send Verification Email
+                    </button>
+                </div>
+
+                <div class="relative flex py-1 items-center">
+                    <div class="flex-grow border-t border-slate-800"></div>
+                    <span class="flex-shrink mx-3 text-[10px] font-mono font-bold text-slate-500 uppercase">OR</span>
+                    <div class="flex-grow border-t border-slate-800"></div>
+                </div>
+
+                <button onclick="handleGoogleSignIn()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow">
+                    <i class="fa-brands fa-google text-red-400 text-sm"></i> Continue with Google
                 </button>
             </div>
 
-            <div class="relative flex py-1 items-center">
-                <div class="flex-grow border-t border-slate-800"></div>
-                <span class="flex-shrink mx-3 text-[10px] font-mono font-bold text-slate-500 uppercase">OR EMAIL</span>
-                <div class="flex-grow border-t border-slate-800"></div>
-            </div>
-
-            <!-- Email & Password Form -->
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-1">Email Address</label>
-                    <input type="email" id="authEmailInput" placeholder="name@example.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 text-sm focus:outline-none focus:border-emerald-500" />
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-1">Password</label>
-                    <input type="password" id="authPasswordInput" placeholder="••••••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 text-sm focus:outline-none focus:border-emerald-500" />
+            <!-- Step 2: Email Verification Pending Screen -->
+            <div id="authVerificationStep" class="hidden space-y-4 text-center py-2">
+                <div class="p-4 rounded-2xl bg-slate-950 border border-emerald-500/30 space-y-2">
+                    <i class="fa-solid fa-envelope-circle-check text-3xl text-emerald-400"></i>
+                    <h4 class="font-bold text-white text-base">Verification Email Sent!</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        We sent a confirmation link to your inbox. Please click the link inside that email to verify your address and complete setup.
+                    </p>
+                    <p class="text-[11px] font-mono text-emerald-400 pt-1">
+                        Assigned Default Handle: <span id="pendingDefaultHandle" class="font-bold"></span>
+                    </p>
                 </div>
 
-                <div class="flex gap-3 pt-2">
-                    <button onclick="handleEmailSignUp()" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition shadow-lg">
-                        Register
+                <div class="flex flex-col gap-2">
+                    <button onclick="verifyEmailAndCompleteSetup()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-xl text-sm transition shadow-lg">
+                        I've Clicked the Link — Complete Setup
                     </button>
-                    <button onclick="handleEmailSignIn()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 font-bold py-3 rounded-xl text-sm transition">
-                        Sign In
+                    <button onclick="resendVerificationEmail()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs transition border border-slate-700">
+                        Resend Verification Email
                     </button>
                 </div>
             </div>
@@ -537,33 +658,107 @@
     </div>
 
     <script>
-        const APP_VERSION = "v5.0";
+        const APP_VERSION = "v5.1";
         const WORKER_BASE_URL = 'https://songswipe-api.songswipper.workers.dev';
 
+        // Anonymous/Authenticated Public State (No email stored in public state)
         let userId = localStorage.getItem('songswipe_user_id');
-        let userEmail = localStorage.getItem('songswipe_user_email') || '';
         if (!userId) {
             userId = 'user_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             localStorage.setItem('songswipe_user_id', userId);
         }
-        function showAuthError(message) {
-    const errorBox = document.getElementById('authModalError');
-    if (errorBox) {
-        errorBox.textContent = message;
-        errorBox.classList.remove('hidden');
-    }
-    showStatus(message, true); // Also surfaces it on the main status banner
-}
 
-    function clearAuthError() {
-        const errorBox = document.getElementById('authModalError');
-        if (errorBox) {
-            errorBox.textContent = '';
-            errorBox.classList.add('hidden');
+        function generateDefaultDisplayName() {
+            const randomNum = Math.floor(10000 + Math.random() * 90000);
+            return `User ${randomNum}`;
         }
-    }
 
-        // Real Firebase Client Initialization Hook (Configure with your project credentials)
+        let userDisplayName = localStorage.getItem(`songswipe_display_name_${userId}`) || generateDefaultDisplayName();
+        localStorage.setItem(`songswipe_display_name_${userId}`, userDisplayName);
+
+        let isAuthenticatedAccount = localStorage.getItem('songswipe_is_authenticated') === 'true';
+        let isEmailVerified = localStorage.getItem('songswipe_email_verified') === 'true';
+        let userCountry = localStorage.getItem(`songswipe_country_${userId}`) || '';
+        let authModalMode = 'signup';
+
+        function updateNavAuthDisplay() {
+            const navLabel = document.getElementById('navAuthLabel');
+            const navProfileName = document.getElementById('navProfileName');
+            if (navProfileName) navProfileName.textContent = userDisplayName;
+
+            if (isAuthenticatedAccount && isEmailVerified) {
+                navLabel.textContent = userDisplayName;
+            } else if (isAuthenticatedAccount && !isEmailVerified) {
+                navLabel.textContent = "Verify Email";
+            } else {
+                navLabel.textContent = "Create Account";
+            }
+        }
+
+        function showAuthError(message) {
+            const errorBox = document.getElementById('authModalError');
+            const successBox = document.getElementById('authModalSuccess');
+            if (successBox) successBox.classList.add('hidden');
+            if (errorBox) {
+                errorBox.textContent = message;
+                errorBox.classList.remove('hidden');
+            }
+        }
+
+        function showAuthSuccess(message) {
+            const errorBox = document.getElementById('authModalError');
+            const successBox = document.getElementById('authModalSuccess');
+            if (errorBox) errorBox.classList.add('hidden');
+            if (successBox) {
+                successBox.textContent = message;
+                successBox.classList.remove('hidden');
+            }
+        }
+
+        function clearAuthMessages() {
+            document.getElementById('authModalError')?.classList.add('hidden');
+            document.getElementById('authModalSuccess')?.classList.add('hidden');
+        }
+
+        function setAuthModalMode(mode) {
+            authModalMode = mode;
+            clearAuthMessages();
+            document.getElementById('authVerificationStep').classList.add('hidden');
+            document.getElementById('authFormContainer').classList.remove('hidden');
+            document.getElementById('authModeTabs').classList.remove('hidden');
+
+            const tabSignUp = document.getElementById('authTabSignUp');
+            const tabSignIn = document.getElementById('authTabSignIn');
+            const signUpFields = document.getElementById('signUpOnlyFields');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const title = document.getElementById('authModalTitle');
+
+            if (mode === 'signup') {
+                tabSignUp.className = "py-2 rounded-lg bg-emerald-500 text-slate-950 transition";
+                tabSignIn.className = "py-2 rounded-lg text-slate-400 hover:text-white transition";
+                signUpFields.classList.remove('hidden');
+                submitBtn.textContent = "Create Account & Send Verification Email";
+                title.textContent = "Create Your Account";
+            } else {
+                tabSignIn.className = "py-2 rounded-lg bg-emerald-500 text-slate-950 transition";
+                tabSignUp.className = "py-2 rounded-lg text-slate-400 hover:text-white transition";
+                signUpFields.classList.add('hidden');
+                submitBtn.textContent = "Sign In";
+                title.textContent = "Sign In to SongSwipe";
+            }
+        }
+
+        function showAuthModal(mode = 'signup') {
+            setAuthModalMode(mode);
+            document.getElementById('authModal').classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
+            clearAuthMessages();
+        }
+
+        // Real Firebase Client Initialization Hook
         let firebaseAuth = null;
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
@@ -582,13 +777,26 @@
                         firebaseAuth = getAuth(app);
                         onAuthStateChanged(firebaseAuth, (user) => {
                             if (user) {
-                                userEmail = user.email;
                                 userId = user.uid;
-                                localStorage.setItem('songswipe_user_email', userEmail);
+                                isAuthenticatedAccount = true;
+                                isEmailVerified = user.emailVerified;
                                 localStorage.setItem('songswipe_user_id', userId);
+                                localStorage.setItem('songswipe_is_authenticated', 'true');
+                                localStorage.setItem('songswipe_email_verified', user.emailVerified ? 'true' : 'false');
+
+                                const savedName = localStorage.getItem(`songswipe_display_name_${userId}`) || user.displayName;
+                                if (savedName) {
+                                    userDisplayName = savedName;
+                                } else {
+                                    userDisplayName = generateDefaultDisplayName();
+                                }
+                                localStorage.setItem(`songswipe_display_name_${userId}`, userDisplayName);
+                                // Note: user.email is intentionally NEVER saved to localStorage or public profiles
                             } else {
-                                userEmail = '';
-                                localStorage.removeItem('songswipe_user_email');
+                                isAuthenticatedAccount = false;
+                                isEmailVerified = false;
+                                localStorage.removeItem('songswipe_is_authenticated');
+                                localStorage.removeItem('songswipe_email_verified');
                             }
                             updateNavAuthDisplay();
                         });
@@ -598,6 +806,296 @@
                 }
             }, 500);
         });
+
+        async function submitAuthForm() {
+            if (authModalMode === 'signup') {
+                await handleEmailSignUp();
+            } else {
+                await handleEmailSignIn();
+            }
+        }
+
+        async function handleEmailSignUp() {
+            clearAuthMessages();
+            const email = document.getElementById('authEmailInput').value.trim();
+            const password = document.getElementById('authPasswordInput').value;
+            const confirmPassword = document.getElementById('authConfirmPasswordInput').value;
+            const isOver16 = document.getElementById('authAgeConfirmCheckbox').checked;
+            const country = document.getElementById('authCountrySelect').value;
+
+            if (!email || !password || !confirmPassword) {
+                showAuthError("Please fill in your email, password, and password confirmation.");
+                return;
+            }
+            if (password.length < 8) {
+                showAuthError("Password must be at least 8 characters long.");
+                return;
+            }
+            if (password !== confirmPassword) {
+                showAuthError("Passwords do not match. Please confirm your password.");
+                return;
+            }
+            if (!isOver16) {
+                showAuthError("You must confirm that you are 16 years of age or older to create an account.");
+                return;
+            }
+            if (!firebaseAuth) {
+                showAuthError("Firebase Authentication is not configured yet. Please add your Firebase API keys in the script.");
+                return;
+            }
+
+            try {
+                const { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } = window.FB_MODULES;
+                
+                // Passwords are sent directly over TLS to Firebase Auth where they are salted & scrypt-hashed.
+                // Neither the developer nor any database query can ever read or decrypt the password.
+                const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+                const user = userCredential.user;
+
+                const defaultHandle = generateDefaultDisplayName();
+                await updateProfile(user, { displayName: defaultHandle });
+                await sendEmailVerification(user);
+
+                // Migrate any existing guest ratings/swipes to the new UID
+                migrateGuestDataToUid(userId, user.uid);
+
+                userId = user.uid;
+                userDisplayName = defaultHandle;
+                isAuthenticatedAccount = true;
+                isEmailVerified = false;
+                userCountry = country;
+
+                localStorage.setItem('songswipe_user_id', userId);
+                localStorage.setItem(`songswipe_display_name_${userId}`, userDisplayName);
+                localStorage.setItem('songswipe_is_authenticated', 'true');
+                localStorage.setItem('songswipe_email_verified', 'false');
+                if (country) localStorage.setItem(`songswipe_country_${userId}`, country);
+
+                // Clear sensitive inputs immediately from DOM memory
+                document.getElementById('authEmailInput').value = '';
+                document.getElementById('authPasswordInput').value = '';
+                document.getElementById('authConfirmPasswordInput').value = '';
+
+                // Switch modal to verification step
+                document.getElementById('authFormContainer').classList.add('hidden');
+                document.getElementById('authModeTabs').classList.add('hidden');
+                document.getElementById('pendingDefaultHandle').textContent = defaultHandle;
+                document.getElementById('authVerificationStep').classList.remove('hidden');
+                updateNavAuthDisplay();
+            } catch (err) {
+                showAuthError(err.message);
+            }
+        }
+
+        async function verifyEmailAndCompleteSetup() {
+            clearAuthMessages();
+            if (!firebaseAuth || !firebaseAuth.currentUser) {
+                showAuthError("Session expired. Please sign in again.");
+                return;
+            }
+            try {
+                const { reload } = window.FB_MODULES;
+                await reload(firebaseAuth.currentUser);
+                if (firebaseAuth.currentUser.emailVerified) {
+                    isEmailVerified = true;
+                    localStorage.setItem('songswipe_email_verified', 'true');
+                    updateNavAuthDisplay();
+                    closeAuthModal();
+                    showStatus(`Email verified! Account setup complete. Welcome, ${userDisplayName}!`);
+                    if (!document.getElementById('view-profile').classList.contains('hidden')) {
+                        showProfilePage();
+                    }
+                } else {
+                    showAuthError("Email is not verified yet. Please check your inbox (and spam folder) and click the verification link first.");
+                }
+            } catch (err) {
+                showAuthError(err.message);
+            }
+        }
+
+        async function resendVerificationEmail() {
+            clearAuthMessages();
+            if (!firebaseAuth || !firebaseAuth.currentUser) return;
+            try {
+                const { sendEmailVerification } = window.FB_MODULES;
+                await sendEmailVerification(firebaseAuth.currentUser);
+                showAuthSuccess("Verification email re-sent! Please check your inbox.");
+            } catch (err) {
+                showAuthError(err.message);
+            }
+        }
+
+        async function handleEmailSignIn() {
+            clearAuthMessages();
+            const email = document.getElementById('authEmailInput').value.trim();
+            const password = document.getElementById('authPasswordInput').value;
+            
+            if (!email || !password) {
+                showAuthError("Please enter your email and password.");
+                return;
+            }
+            if (!firebaseAuth) {
+                showAuthError("Firebase is not initialized. Please update your API key configuration.");
+                return;
+            }
+
+            try {
+                const { signInWithEmailAndPassword } = window.FB_MODULES;
+                const result = await signInWithEmailAndPassword(firebaseAuth, email, password);
+                const user = result.user;
+
+                userId = user.uid;
+                isAuthenticatedAccount = true;
+                isEmailVerified = user.emailVerified;
+                userDisplayName = localStorage.getItem(`songswipe_display_name_${userId}`) || user.displayName || generateDefaultDisplayName();
+
+                localStorage.setItem('songswipe_user_id', userId);
+                localStorage.setItem(`songswipe_display_name_${userId}`, userDisplayName);
+                localStorage.setItem('songswipe_is_authenticated', 'true');
+                localStorage.setItem('songswipe_email_verified', isEmailVerified ? 'true' : 'false');
+
+                // Clear email/password from DOM immediately
+                document.getElementById('authEmailInput').value = '';
+                document.getElementById('authPasswordInput').value = '';
+
+                updateNavAuthDisplay();
+                if (!isEmailVerified) {
+                    document.getElementById('authFormContainer').classList.add('hidden');
+                    document.getElementById('authModeTabs').classList.add('hidden');
+                    document.getElementById('pendingDefaultHandle').textContent = userDisplayName;
+                    document.getElementById('authVerificationStep').classList.remove('hidden');
+                } else {
+                    closeAuthModal();
+                    showStatus(`Welcome back, ${userDisplayName}!`);
+                }
+            } catch (err) {
+                showAuthError(err.message);
+            }
+        }
+
+        async function handleGoogleSignIn() {
+            clearAuthMessages();
+            if (!firebaseAuth) {
+                showAuthError("Firebase is not initialized. Please update your API key configuration.");
+                return;
+            }
+            try {
+                const { signInWithPopup, GoogleAuthProvider } = window.FB_MODULES;
+                const provider = new GoogleAuthProvider();
+                const result = await signInWithPopup(firebaseAuth, provider);
+                const user = result.user;
+
+                migrateGuestDataToUid(userId, user.uid);
+                userId = user.uid;
+                isAuthenticatedAccount = true;
+                isEmailVerified = true;
+                userDisplayName = localStorage.getItem(`songswipe_display_name_${userId}`) || generateDefaultDisplayName();
+
+                localStorage.setItem('songswipe_user_id', userId);
+                localStorage.setItem(`songswipe_display_name_${userId}`, userDisplayName);
+                localStorage.setItem('songswipe_is_authenticated', 'true');
+                localStorage.setItem('songswipe_email_verified', 'true');
+
+                updateNavAuthDisplay();
+                closeAuthModal();
+                showStatus(`Signed in as ${userDisplayName}!`);
+            } catch (err) {
+                showAuthError(err.message);
+            }
+        }
+
+        async function handleSignOut() {
+            try {
+                if (firebaseAuth && window.FB_MODULES) {
+                    await window.FB_MODULES.signOut(firebaseAuth);
+                }
+            } catch (e) {}
+            isAuthenticatedAccount = false;
+            isEmailVerified = false;
+            userId = 'user_' + Math.random().toString(36).substring(2, 15);
+            userDisplayName = generateDefaultDisplayName();
+            localStorage.setItem('songswipe_user_id', userId);
+            localStorage.setItem(`songswipe_display_name_${userId}`, userDisplayName);
+            localStorage.removeItem('songswipe_is_authenticated');
+            localStorage.removeItem('songswipe_email_verified');
+            updateNavAuthDisplay();
+            showStatus("You have signed out.");
+            showProfilePage();
+        }
+
+        function migrateGuestDataToUid(oldUid, newUid) {
+            if (!oldUid || oldUid === newUid) return;
+            try {
+                const oldArtists = localStorage.getItem(`songswipe_user_artists_${oldUid}`);
+                if (oldArtists && !localStorage.getItem(`songswipe_user_artists_${newUid}`)) {
+                    localStorage.setItem(`songswipe_user_artists_${newUid}`, oldArtists);
+                }
+                const oldVotes = localStorage.getItem(`songswipe_total_votes_${oldUid}`);
+                if (oldVotes && !localStorage.getItem(`songswipe_total_votes_${newUid}`)) {
+                    localStorage.setItem(`songswipe_total_votes_${newUid}`, oldVotes);
+                }
+            } catch (e) {}
+        }
+
+        async function saveDisplayName() {
+            const input = document.getElementById('profileDisplayNameInput');
+            const newName = input.value.trim();
+            if (!newName) {
+                showStatus("Display name cannot be empty.", true);
+                return;
+            }
+            userDisplayName = newName;
+            localStorage.setItem(`songswipe_display_name_${userId}`, userDisplayName);
+
+            try {
+                if (firebaseAuth && firebaseAuth.currentUser && window.FB_MODULES) {
+                    await window.FB_MODULES.updateProfile(firebaseAuth.currentUser, { displayName: userDisplayName });
+                }
+            } catch (e) {}
+
+            updateNavAuthDisplay();
+            showStatus(`Display name updated to "${userDisplayName}"!`);
+        }
+
+        function getRankerLevelForArtist(artistId, swipesCount) {
+            const cachedArtist = storageClient.getArtist(artistId);
+            const songCount = cachedArtist?.uniqueSongs?.length || 15;
+            const prog = storageClient.getUserProgress(artistId);
+
+            const cTarget = Math.max(5, Math.round(songCount * Math.log2(Math.max(2, songCount)) * 0.75));
+            const totalPairs = Math.max(1, (songCount * (songCount - 1)) / 2);
+            const hTarget = Math.min(totalPairs, Math.max(cTarget * 2, Math.round(songCount * Math.pow(Math.log2(Math.max(2, songCount)), 2) * 0.4)));
+
+            const uniqueCompared = prog.comparedPairs?.length || 0;
+            const rounds = Math.max(prog.roundCounter || 1, swipesCount + 1);
+
+            if (uniqueCompared >= totalPairs && songCount >= 2) {
+                return {
+                    label: "Obsessive",
+                    badgeClass: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+                    icon: "fa-award"
+                };
+            }
+            if (uniqueCompared >= hTarget) {
+                return {
+                    label: "Hardcore",
+                    badgeClass: "bg-teal-500/20 text-teal-300 border-teal-500/30",
+                    icon: "fa-fire"
+                };
+            }
+            if (rounds > cTarget || swipesCount >= 5) {
+                return {
+                    label: "Casual",
+                    badgeClass: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+                    icon: "fa-headphones"
+                };
+            }
+            return {
+                label: "Starter",
+                badgeClass: "bg-slate-800 text-slate-300 border-slate-700",
+                icon: "fa-seedling"
+            };
+        }
 
         let debugLogs = [];
         function logDebug(message, data = null) {
@@ -746,40 +1244,6 @@
         }
 
         function hideStatus() { document.getElementById('statusBanner').classList.add('hidden'); }
-        function showAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
-        function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
-
-        // Real Firebase Authentication Handlers
-        async function handleEmailSignIn() {
-    clearAuthError();
-    const email = document.getElementById('authEmailInput').value.trim();
-    const password = document.getElementById('authPasswordInput').value;
-    
-    if (!email || !password) {
-        showAuthError("Please enter your email and password.");
-        return;
-    }
-    
-    if (!firebaseAuth) {
-        showAuthError("Firebase is not initialized. Please update your API key configuration.");
-        return;
-    }
-
-    try {
-        const { signInWithEmailAndPassword } = window.FB_MODULES;
-        const result = await signInWithEmailAndPassword(firebaseAuth, email, password);
-        userEmail = result.user.email;
-        userId = result.user.uid;
-        localStorage.setItem('songswipe_user_email', userEmail);
-        localStorage.setItem('songswipe_user_id', userId);
-        updateNavAuthDisplay();
-        closeAuthModal();
-        showStatus(`Welcome back, ${userEmail}!`);
-    } catch (err) {
-        // Catches 'Firebase: Error (auth/api-key-not-valid...)' and prints to modal popup
-        showAuthError(err.message);
-    }
-}
 
         let currentArtist = null;
         let artistAlbums = [];
@@ -1012,27 +1476,82 @@
         async function showProfilePage() {
             hideAllViews();
             resetDiscographyState();
-            showGlobalLoading(true, "Loading your user profile...");
-            document.getElementById('profileUserIdDisplay').textContent = userId;
-            document.getElementById('profileAccountEmail').textContent = userEmail ? `Signed in as: ${userEmail}` : "Signed in as Guest (Anonymous ID)";
+            showGlobalLoading(true, "Loading your account profile...");
+
+            document.getElementById('profileUserIdDisplay').textContent = userId.slice(0, 12) + '...';
+            document.getElementById('profileDisplayNameInput').value = userDisplayName;
+
+            const statusText = document.getElementById('profileAccountStatusText');
+            const verifyBadge = document.getElementById('profileVerificationBadge');
+            const manageBtn = document.getElementById('profileManageAuthBtn');
+            const signOutBtn = document.getElementById('profileSignOutBtn');
+            const metaTags = document.getElementById('profileMetaTags');
+
+            if (isAuthenticatedAccount && isEmailVerified) {
+                statusText.textContent = "Verified Cloud Account (Email hidden for privacy)";
+                verifyBadge.textContent = "Email Verified";
+                verifyBadge.className = "text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                verifyBadge.classList.remove('hidden');
+                manageBtn.classList.add('hidden');
+                signOutBtn.classList.remove('hidden');
+            } else if (isAuthenticatedAccount && !isEmailVerified) {
+                statusText.textContent = "Account Created — Pending Email Verification";
+                verifyBadge.textContent = "Unverified";
+                verifyBadge.className = "text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20";
+                verifyBadge.classList.remove('hidden');
+                manageBtn.textContent = "Complete Verification";
+                manageBtn.onclick = () => {
+                    document.getElementById('authFormContainer').classList.add('hidden');
+                    document.getElementById('authModeTabs').classList.add('hidden');
+                    document.getElementById('pendingDefaultHandle').textContent = userDisplayName;
+                    document.getElementById('authVerificationStep').classList.remove('hidden');
+                    document.getElementById('authModal').classList.remove('hidden');
+                };
+                manageBtn.classList.remove('hidden');
+                signOutBtn.classList.remove('hidden');
+            } else {
+                statusText.textContent = "Guest Session (Create an account to sync across devices)";
+                verifyBadge.classList.add('hidden');
+                manageBtn.textContent = "Create Account / Sign In";
+                manageBtn.onclick = () => showAuthModal('signup');
+                manageBtn.classList.remove('hidden');
+                signOutBtn.classList.add('hidden');
+            }
+
+            const savedCountry = localStorage.getItem(`songswipe_country_${userId}`);
+            metaTags.innerHTML = `
+                <span class="bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg"><i class="fa-solid fa-user-check text-emerald-400 mr-1"></i> Age 16+ Confirmed</span>
+                ${savedCountry ? `<span class="bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg"><i class="fa-solid fa-earth-americas text-cyan-400 mr-1"></i> Country: ${savedCountry}</span>` : ''}
+            `;
 
             try {
                 const totalVotes = parseInt(localStorage.getItem(`songswipe_total_votes_${userId}`) || '0');
                 const totalTopPicked = parseInt(localStorage.getItem(`songswipe_top_picked_${userId}`) || '0');
                 const totalBottomPicked = parseInt(localStorage.getItem(`songswipe_bottom_picked_${userId}`) || '0');
-                const swipedArtistsArr = Object.values(storageClient.getUserSwipedArtists());
+                const swipedArtistsArr = Object.values(storageClient.getUserSwipedArtists())
+                    .sort((a, b) => b.swipesCount - a.swipesCount);
 
                 document.getElementById('profileTotalSwipes').textContent = totalVotes;
                 document.getElementById('profileTopSongsPicked').textContent = totalTopPicked;
                 document.getElementById('profileBottomSongsPicked').textContent = totalBottomPicked;
 
                 const artistListEl = document.getElementById('profileArtistsList');
-                artistListEl.innerHTML = swipedArtistsArr.length > 0 ? swipedArtistsArr.map(art => `
-                    <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800 gap-3">
-                        <span class="font-bold text-white text-sm truncate">${art.artistName}</span>
-                        <span class="text-xs bg-slate-800 text-slate-300 border border-slate-700 px-2.5 py-1 rounded-lg">${art.swipesCount} swipes</span>
-                    </div>
-                `).join('') : `<p class="text-sm text-slate-400">No artists swiped yet.</p>`;
+                artistListEl.innerHTML = swipedArtistsArr.length > 0 ? swipedArtistsArr.map(art => {
+                    const tier = getRankerLevelForArtist(art.artistId, art.swipesCount);
+                    return `
+                        <div class="flex items-center justify-between p-3.5 bg-slate-950/80 rounded-xl border border-slate-800 gap-3">
+                            <div class="min-w-0">
+                                <div class="font-bold text-white text-sm truncate">${art.artistName}</div>
+                                <div class="text-[11px] text-slate-400 mt-0.5">${art.swipesCount} swipes recorded</div>
+                            </div>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                <span class="text-xs font-bold border px-2.5 py-1 rounded-lg flex items-center gap-1.5 ${tier.badgeClass}">
+                                    <i class="fa-solid ${tier.icon}"></i> ${tier.label}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('') : `<p class="text-sm text-slate-400">No artists ranked yet. Search an artist above to start swiping!</p>`;
             } catch (err) {}
 
             showGlobalLoading(false);
@@ -1761,7 +2280,7 @@
             ctx.fillText(`${currentArtist.name} - Album Rankings`, 40, 60);
             ctx.fillStyle = '#10b981';
             ctx.font = '14px sans-serif';
-            ctx.fillText('Generated via SongSwipe v5.0', 40, 90);
+            ctx.fillText(`Ranked by ${userDisplayName} via SongSwipe ${APP_VERSION}`, 40, 90);
 
             let startY = 130;
             cachedSortedAlbums.forEach((alb, idx) => {
@@ -1797,7 +2316,7 @@
             ctx.fillText(`${currentArtist.name} - Top & Bottom Songs`, 40, 60);
             ctx.fillStyle = '#10b981';
             ctx.font = '14px sans-serif';
-            ctx.fillText('Generated via SongSwipe v5.0', 40, 90);
+            ctx.fillText(`Ranked by ${userDisplayName} via SongSwipe ${APP_VERSION}`, 40, 90);
 
             let startY = 130;
             ctx.fillStyle = '#34d399';
