@@ -2454,6 +2454,40 @@
             }).join('');
         }
 
+        // Expose functions globally to prevent ReferenceError with HTML onclick attributes
+        window.showAuthModal = showAuthModal;
+        window.showProfilePage = showProfilePage;
+        window.showHome = showHome;
+        window.showArtistPage = showArtistPage;
+        window.switchArtistTab = switchArtistTab;
+        window.triggerSearchFromButton = triggerSearchFromButton;
+        window.handleSearchInput = handleSearchInput;
+        window.handleSearchKeyDown = handleSearchKeyDown;
+        window.handleCardClick = handleCardClick;
+        window.setRankingMode = setRankingMode;
+        window.startEloRanking = startEloRanking;
+        window.undoLastVote = undoLastVote;
+        window.jumpToCategory = jumpToCategory;
+        window.exportAlbumLeaderboardPNG = exportAlbumLeaderboardPNG;
+        window.exportTopBottomSongsPNG = exportTopBottomSongsPNG;
+        window.renderAlbumStats = renderAlbumStats;
+        window.openCurateAllSongs = openCurateAllSongs;
+        window.toggleAlbumAccordion = toggleAlbumAccordion;
+        window.toggleCurateAccordion = toggleCurateAccordion;
+        window.toggleExcludeAlbum = toggleExcludeAlbum;
+        window.toggleExcludeSong = toggleExcludeSong;
+        window.refreshArtistSpotifyData = refreshArtistSpotifyData;
+        window.closeAuthModal = closeAuthModal;
+        window.submitAuthForm = submitAuthForm;
+        window.setAuthModalMode = setAuthModalMode;
+        window.verifyEmailAndCompleteSetup = verifyEmailAndCompleteSetup;
+        window.resendVerificationEmail = resendVerificationEmail;
+        window.handleGoogleSignIn = handleGoogleSignIn;
+        window.handleSignOut = handleSignOut;
+        window.saveDisplayName = saveDisplayName;
+        window.hideStatus = hideStatus;
+        window.downloadDebugLog = downloadDebugLog;
+
         window.addEventListener('DOMContentLoaded', () => {
             logDebug(`SongSwipe initialized (${APP_VERSION}).`);
             spotifyClient.initToken();
