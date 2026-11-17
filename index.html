@@ -659,7 +659,9 @@
 
     <script>
         const APP_VERSION = "v5.1";
-        const WORKER_BASE_URL = 'https://songswipe-api.songswipper.workers.dev';
+        
+        // Dynamically load Worker URL from environment or fall back to production endpoint
+        const WORKER_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_WORKER_BASE_URL) || 'https://songswipe-api.songswipper.workers.dev';
 
         // Anonymous/Authenticated Public State (No email stored in public state)
         let userId = localStorage.getItem('songswipe_user_id');
@@ -758,16 +760,24 @@
             clearAuthMessages();
         }
 
-        // Real Firebase Client Initialization Hook
+        // Real Firebase Client Initialization Hook with .env integration
         let firebaseAuth = null;
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 try {
                     if (window.FB_MODULES) {
                         const { initializeApp, getAuth, onAuthStateChanged } = window.FB_MODULES;
+                        
+                        // Pull configuration securely from Vite environment variables (or fall back to placeholders)
                         const firebaseConfig = {
-                            
+                            apiKey: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_FIREBASE_API_KEY) || "YOUR_FIREBASE_API_KEY",
+                            authDomain: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_FIREBASE_AUTH_DOMAIN) || "YOUR_PROJECT.firebaseapp.com",
+                            projectId: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_FIREBASE_PROJECT_ID) || "YOUR_PROJECT_ID",
+                            storageBucket: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) || "YOUR_PROJECT.appspot.com",
+                            messagingSenderId: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) || "SENDER_ID",
+                            appId: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_FIREBASE_APP_ID) || "APP_ID"
                         };
+
                         const app = initializeApp(firebaseConfig);
                         firebaseAuth = getAuth(app);
                         onAuthStateChanged(firebaseAuth, (user) => {
@@ -786,7 +796,6 @@
                                     userDisplayName = generateDefaultDisplayName();
                                 }
                                 localStorage.setItem(`songswipe_display_name_${userId}`, userDisplayName);
-                                // Note: user.email is intentionally NEVER saved to localStorage or public profiles
                             } else {
                                 isAuthenticatedAccount = false;
                                 isEmailVerified = false;
@@ -835,15 +844,13 @@
                 return;
             }
             if (!firebaseAuth) {
-                showAuthError("Firebase Authentication is not configured yet. Please add your Firebase API keys in the script.");
+                showAuthError("Firebase Authentication is not configured yet. Please add your Firebase API keys in your .env file.");
                 return;
             }
 
             try {
                 const { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } = window.FB_MODULES;
                 
-                // Passwords are sent directly over TLS to Firebase Auth where they are salted & scrypt-hashed.
-                // Neither the developer nor any database query can ever read or decrypt the password.
                 const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
                 const user = userCredential.user;
 
@@ -851,7 +858,6 @@
                 await updateProfile(user, { displayName: defaultHandle });
                 await sendEmailVerification(user);
 
-                // Migrate any existing guest ratings/swipes to the new UID
                 migrateGuestDataToUid(userId, user.uid);
 
                 userId = user.uid;
@@ -866,12 +872,10 @@
                 localStorage.setItem('songswipe_email_verified', 'false');
                 if (country) localStorage.setItem(`songswipe_country_${userId}`, country);
 
-                // Clear sensitive inputs immediately from DOM memory
                 document.getElementById('authEmailInput').value = '';
                 document.getElementById('authPasswordInput').value = '';
                 document.getElementById('authConfirmPasswordInput').value = '';
 
-                // Switch modal to verification step
                 document.getElementById('authFormContainer').classList.add('hidden');
                 document.getElementById('authModeTabs').classList.add('hidden');
                 document.getElementById('pendingDefaultHandle').textContent = defaultHandle;
@@ -901,7 +905,7 @@
                         showProfilePage();
                     }
                 } else {
-                    showAuthError("Email is not verified yet. Please check your inbox (and spam folder) and click the verification link first.");
+                    showAuthError("Email is not verified yet. Please check your inbox and click the verification link first.");
                 }
             } catch (err) {
                 showAuthError(err.message);
@@ -930,7 +934,7 @@
                 return;
             }
             if (!firebaseAuth) {
-                showAuthError("Firebase is not initialized. Please update your API key configuration.");
+                showAuthError("Firebase is not initialized. Please update your environment variables configuration.");
                 return;
             }
 
@@ -949,7 +953,6 @@
                 localStorage.setItem('songswipe_is_authenticated', 'true');
                 localStorage.setItem('songswipe_email_verified', isEmailVerified ? 'true' : 'false');
 
-                // Clear email/password from DOM immediately
                 document.getElementById('authEmailInput').value = '';
                 document.getElementById('authPasswordInput').value = '';
 
@@ -971,7 +974,7 @@
         async function handleGoogleSignIn() {
             clearAuthMessages();
             if (!firebaseAuth) {
-                showAuthError("Firebase is not initialized. Please update your API key configuration.");
+                showAuthError("Firebase is not initialized. Please check your configuration.");
                 return;
             }
             try {
