@@ -759,7 +759,17 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email, password })
                 });
-                const data = await response.json();
+                const rawText = await response.text();
+                let data = {};
+                try {
+                    data = rawText ? JSON.parse(rawText) : {};
+                } catch {
+                    throw new Error(rawText || `Request failed with status ${response.status}`);
+                }
+
+                if (!response.ok || data.error) {
+                    throw new Error(data.error?.message || data.error || "Account creation failed.");
+                }
 
                 if (!response.ok || data.error) {
                     throw new Error(data.error?.message || data.error || "Account creation failed.");
