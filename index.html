@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SongSwipe v5.1 - Secure Accounts & Ranker Tiers</title>
+    <title>SongSwipe v5.2 - Secure Accounts & Ranker Tiers</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -34,7 +34,7 @@
     <header class="bg-slate-900/85 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2 cursor-pointer hover:opacity-90 transition truncate" onclick="showHome()">
-                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v5.1</span>
+                <i class="fa-solid fa-compact-disc text-emerald-400"></i> SongSwipe <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-mono">v5.2</span>
             </h1>
             <nav class="flex gap-2 sm:gap-3 items-center">
                 <button onclick="showAuthModal('signin')" id="navAuthBtn" class="text-xs sm:text-sm font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
@@ -160,16 +160,20 @@
             <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-800 shadow-xl space-y-5">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
                     <div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <h4 class="font-bold text-white text-base">Account Status</h4>
                             <span id="profileVerificationBadge" class="hidden text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Verified</span>
+                            <span id="accountVerifyStatus" class="text-xs text-amber-400"></span>
                         </div>
                         <p id="profileAccountStatusText" class="text-xs text-slate-400 mt-1">Guest Session (Local Device Storage)</p>
                         <p class="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5">
                             <i class="fa-solid fa-shield-halved text-emerald-400"></i> Privacy Active: Your email is never visible to admins or other users, and passwords are one-way hashed.
                         </p>
                     </div>
-                    <div class="flex gap-2 flex-shrink-0">
+                    <div class="flex gap-2 flex-wrap flex-shrink-0">
+                        <button type="button" id="accountResendVerifyBtn" onclick="handleResendVerificationEmail()" class="hidden bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-bold px-3.5 py-2 rounded-xl text-xs transition">
+                            resend verification email
+                        </button>
                         <button id="profileManageAuthBtn" onclick="showAuthModal('signup')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition shadow">
                             Create Account / Sign In
                         </button>
@@ -532,8 +536,8 @@
                 <button id="authTabSignIn" onclick="setAuthModalMode('signin')" class="py-2 rounded-lg text-slate-400 hover:text-white transition">Sign In</button>
             </div>
 
-            <div id="authModalError" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium"></div>
-            <div id="authModalSuccess" class="hidden p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium"></div>
+            <div id="authModalError" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium whitespace-pre-line"></div>
+            <div id="authModalSuccess" class="hidden p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium whitespace-pre-line"></div>
 
             <!-- Step 1: Sign Up / Sign In Form -->
             <div id="authFormContainer" class="space-y-3.5">
@@ -543,7 +547,12 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-1">Password <span class="text-rose-400">*</span></label>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-bold text-slate-400">Password <span class="text-rose-400">*</span></label>
+                        <button type="button" id="forgotPasswordBtn" onclick="handleForgotPassword()" class="hidden text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition">
+                            Forgot password?
+                        </button>
+                    </div>
                     <input type="password" id="authPasswordInput" placeholder="Minimum 8 characters" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-emerald-500" />
                 </div>
 
@@ -597,8 +606,10 @@
                 <div class="p-4 rounded-2xl bg-slate-950 border border-emerald-500/30 space-y-2">
                     <i class="fa-solid fa-envelope-circle-check text-3xl text-emerald-400"></i>
                     <h4 class="font-bold text-white text-base">Verification Email Sent!</h4>
-                    <p class="text-xs text-slate-400 leading-relaxed">
-                        We sent a confirmation link to your inbox. Please click the link inside that email to verify your address and complete setup.
+                    <p id="verificationStepBody" class="text-xs text-slate-400 leading-relaxed whitespace-pre-line">
+                        We sent a confirmation link to your inbox. Please verify within 24 hours to complete setup.
+
+SongSwipe
                     </p>
                     <p class="text-[11px] font-mono text-emerald-400 pt-1">
                         Assigned Default Handle: <span id="pendingDefaultHandle" class="font-bold"></span>
@@ -609,8 +620,8 @@
                     <button onclick="verifyEmailAndCompleteSetup()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-xl text-sm transition shadow-lg">
                         I've Clicked the Link — Complete Setup
                     </button>
-                    <button onclick="resendVerificationEmail()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs transition border border-slate-700">
-                        Resend Verification Email
+                    <button onclick="handleResendVerificationEmail()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs transition border border-slate-700">
+                        resend verification email
                     </button>
                 </div>
             </div>
@@ -618,7 +629,7 @@
     </div>
 
     <script type="module">
-        const APP_VERSION = "v5.1";
+        const APP_VERSION = "v5.2";
         
         // Cloudflare Worker Backend-for-Frontend proxy endpoint
         const WORKER_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_WORKER_BASE_URL) || 'https://songswipe-api.songswipper.workers.dev';
@@ -642,6 +653,52 @@
         let isEmailVerified = localStorage.getItem('songswipe_email_verified') === 'true';
         let userCountry = localStorage.getItem(`songswipe_country_${userId}`) || '';
         let authModalMode = 'signup';
+
+        async function parseWorkerResponse(response) {
+            const rawText = await response.text();
+            let data = {};
+            try {
+                data = rawText ? JSON.parse(rawText) : {};
+            } catch {
+                throw new Error(rawText || `Request failed with status ${response.status}`);
+            }
+            return data;
+        }
+
+        function isVerificationExpired() {
+            const expiresAt = Number(localStorage.getItem(`songswipe_verify_expires_${userId}`) || '0');
+            return !isEmailVerified && expiresAt > 0 && Date.now() > expiresAt;
+        }
+
+        function renderAccountVerificationUI() {
+            const resendBtn = document.getElementById('accountResendVerifyBtn');
+            const statusEl = document.getElementById('accountVerifyStatus');
+            if (!resendBtn || !statusEl) return;
+
+            if (!isAuthenticatedAccount) {
+                resendBtn.classList.add('hidden');
+                statusEl.textContent = '';
+                return;
+            }
+
+            if (isEmailVerified) {
+                // Once verified, the resend option disappears completely
+                resendBtn.remove();
+                statusEl.textContent = 'Email Verified';
+                statusEl.className = 'text-xs text-emerald-400';
+                return;
+            }
+
+            if (isVerificationExpired()) {
+                statusEl.textContent = 'Verification expired';
+                statusEl.className = 'text-xs text-rose-400';
+            } else {
+                statusEl.textContent = 'Verification expires in 24 hours';
+                statusEl.className = 'text-xs text-amber-400';
+            }
+            resendBtn.textContent = 'resend verification email';
+            resendBtn.classList.remove('hidden');
+        }
 
         function updateNavAuthDisplay() {
             const navLabel = document.getElementById('navAuthLabel');
@@ -692,6 +749,7 @@
             const tabSignUp = document.getElementById('authTabSignUp');
             const tabSignIn = document.getElementById('authTabSignIn');
             const signUpFields = document.getElementById('signUpOnlyFields');
+            const forgotBtn = document.getElementById('forgotPasswordBtn');
             const submitBtn = document.getElementById('authSubmitBtn');
             const title = document.getElementById('authModalTitle');
 
@@ -699,12 +757,14 @@
                 tabSignUp.className = "py-2 rounded-lg bg-emerald-500 text-slate-950 transition";
                 tabSignIn.className = "py-2 rounded-lg text-slate-400 hover:text-white transition";
                 signUpFields.classList.remove('hidden');
+                forgotBtn.classList.add('hidden');
                 submitBtn.textContent = "Create Account & Send Verification Email";
                 title.textContent = "Create Your Account";
             } else {
                 tabSignIn.className = "py-2 rounded-lg bg-emerald-500 text-slate-950 transition";
                 tabSignUp.className = "py-2 rounded-lg text-slate-400 hover:text-white transition";
                 signUpFields.classList.add('hidden');
+                forgotBtn.classList.remove('hidden');
                 submitBtn.textContent = "Sign In";
                 title.textContent = "Sign In to SongSwipe";
             }
@@ -759,20 +819,14 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email, password })
                 });
-                const rawText = await response.text();
-                let data = {};
-                try {
-                    data = rawText ? JSON.parse(rawText) : {};
-                } catch {
-                    throw new Error(rawText || `Request failed with status ${response.status}`);
-                }
+                const data = await parseWorkerResponse(response);
 
                 if (!response.ok || data.error) {
-                    throw new Error(data.error?.message || data.error || "Account creation failed.");
-                }
-
-                if (!response.ok || data.error) {
-                    throw new Error(data.error?.message || data.error || "Account creation failed.");
+                    const msg = data.error?.message || data.error || "Account creation failed.";
+                    if (String(msg).includes("EMAIL_EXISTS")) {
+                        throw new Error("Email already registered, please login");
+                    }
+                    throw new Error(msg);
                 }
 
                 const resolvedUid = data.localId || data.uid || userId;
@@ -782,28 +836,83 @@
                 userId = resolvedUid;
                 userDisplayName = defaultHandle;
                 isAuthenticatedAccount = true;
-                isEmailVerified = true;
+                isEmailVerified = false;
                 userCountry = country;
 
                 if (data.idToken) {
                     sessionStorage.setItem('songswipe_id_token', data.idToken);
                 }
+                const expiresAt = data.expiresAt || (Date.now() + 24 * 60 * 60 * 1000);
+                localStorage.setItem(`songswipe_verify_expires_${userId}`, String(expiresAt));
                 localStorage.setItem('songswipe_user_id', userId);
                 localStorage.setItem(`songswipe_display_name_${userId}`, userDisplayName);
                 localStorage.setItem('songswipe_is_authenticated', 'true');
-                localStorage.setItem('songswipe_email_verified', 'true');
+                localStorage.setItem('songswipe_email_verified', 'false');
                 if (country) localStorage.setItem(`songswipe_country_${userId}`, country);
 
                 document.getElementById('authEmailInput').value = '';
                 document.getElementById('authPasswordInput').value = '';
                 document.getElementById('authConfirmPasswordInput').value = '';
 
+                document.getElementById('authFormContainer').classList.add('hidden');
+                document.getElementById('authModeTabs').classList.add('hidden');
+                document.getElementById('pendingDefaultHandle').textContent = defaultHandle;
+                document.getElementById('verificationStepBody').textContent =
+                    data.emailMessage || "We sent a confirmation link to your inbox. Please verify within 24 hours to complete setup.\n\nSongSwipe";
+                document.getElementById('authVerificationStep').classList.remove('hidden');
                 updateNavAuthDisplay();
-                closeAuthModal();
-                showStatus(`Account created! Welcome, ${userDisplayName}!`);
-                if (!document.getElementById('view-profile').classList.contains('hidden')) {
-                    showProfilePage();
+            } catch (err) {
+                showAuthError(err.message);
+            }
+        }
+
+        async function handleResendVerificationEmail() {
+            clearAuthMessages();
+            const idToken = sessionStorage.getItem('songswipe_id_token');
+            try {
+                const response = await fetch(`${WORKER_BASE_URL}/auth/send-verification`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ idToken })
+                });
+                const data = await parseWorkerResponse(response);
+                if (!response.ok || data.error) {
+                    throw new Error(data.error?.message || data.error || "Could not resend verification email.");
                 }
+                const expiresAt = data.expiresAt || (Date.now() + 24 * 60 * 60 * 1000);
+                localStorage.setItem(`songswipe_verify_expires_${userId}`, String(expiresAt));
+                const msg = data.message || "Verification email sent. This link expires in 24 hours.\n\nSongSwipe";
+                showAuthSuccess(msg);
+                if (!document.getElementById('view-profile').classList.contains('hidden')) {
+                    showStatus(msg);
+                    renderAccountVerificationUI();
+                }
+            } catch (err) {
+                showAuthError(err.message);
+                if (!document.getElementById('view-profile').classList.contains('hidden')) {
+                    showStatus(err.message, true);
+                }
+            }
+        }
+
+        async function handleForgotPassword() {
+            clearAuthMessages();
+            const email = document.getElementById('authEmailInput').value.trim();
+            if (!email) {
+                showAuthError("Please enter your email address first, then click Forgot password.");
+                return;
+            }
+            try {
+                const response = await fetch(`${WORKER_BASE_URL}/auth/forgot-password`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email })
+                });
+                const data = await parseWorkerResponse(response);
+                if (!response.ok || data.error) {
+                    throw new Error(data.error?.message || data.error || "Could not send password reset email.");
+                }
+                showAuthSuccess(data.message || "If that email is registered, a password reset link has been sent.\n\nSongSwipe");
             } catch (err) {
                 showAuthError(err.message);
             }
@@ -813,17 +922,13 @@
             clearAuthMessages();
             isEmailVerified = true;
             localStorage.setItem('songswipe_email_verified', 'true');
+            localStorage.removeItem(`songswipe_verify_expires_${userId}`);
             updateNavAuthDisplay();
             closeAuthModal();
-            showStatus(`Account setup complete. Welcome, ${userDisplayName}!`);
+            showStatus(`Email verified! Account setup complete. Welcome, ${userDisplayName}!`);
             if (!document.getElementById('view-profile').classList.contains('hidden')) {
                 showProfilePage();
             }
-        }
-
-        async function resendVerificationEmail() {
-            clearAuthMessages();
-            showAuthSuccess("Account session is active.");
         }
 
         async function handleEmailSignIn() {
@@ -842,7 +947,7 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email, password })
                 });
-                const data = await response.json();
+                const data = await parseWorkerResponse(response);
 
                 if (!response.ok || data.error) {
                     throw new Error(data.error?.message || data.error || "Sign in failed.");
@@ -1381,6 +1486,8 @@
                 manageBtn.classList.remove('hidden');
                 signOutBtn.classList.add('hidden');
             }
+
+            renderAccountVerificationUI();
 
             const savedCountry = localStorage.getItem(`songswipe_country_${userId}`);
             metaTags.innerHTML = `
@@ -2347,7 +2454,8 @@
         window.submitAuthForm = submitAuthForm;
         window.setAuthModalMode = setAuthModalMode;
         window.verifyEmailAndCompleteSetup = verifyEmailAndCompleteSetup;
-        window.resendVerificationEmail = resendVerificationEmail;
+        window.handleResendVerificationEmail = handleResendVerificationEmail;
+        window.handleForgotPassword = handleForgotPassword;
         window.handleSignOut = handleSignOut;
         window.saveDisplayName = saveDisplayName;
         window.hideStatus = hideStatus;
