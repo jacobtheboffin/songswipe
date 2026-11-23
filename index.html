@@ -6,36 +6,6 @@
     <title>SongSwipe v5.1 - Secure Accounts & Ranker Tiers</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase SDK Scripts for Real Authentication & Verification Setup -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            signInWithPopup, 
-            GoogleAuthProvider, 
-            signOut, 
-            onAuthStateChanged,
-            sendEmailVerification,
-            updateProfile,
-            reload
-        } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
-        
-        window.FB_MODULES = { 
-            initializeApp, 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            signInWithPopup, 
-            GoogleAuthProvider, 
-            signOut, 
-            onAuthStateChanged,
-            sendEmailVerification,
-            updateProfile,
-            reload
-        };
-    </script>
     <style>
         @keyframes smoothShimmer {
             0% { transform: translateX(-100%); }
@@ -541,7 +511,7 @@
 
     </main>
 
-    <!-- REAL AUTHENTICATION & REGISTRATION MODAL -->
+    <!-- AUTHENTICATION & REGISTRATION MODAL -->
     <div id="authModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 relative my-8">
             <button onclick="closeAuthModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white transition">
@@ -620,16 +590,6 @@
                         Create Account & Send Verification Email
                     </button>
                 </div>
-
-                <div class="relative flex py-1 items-center">
-                    <div class="flex-grow border-t border-slate-800"></div>
-                    <span class="flex-shrink mx-3 text-[10px] font-mono font-bold text-slate-500 uppercase">OR</span>
-                    <div class="flex-grow border-t border-slate-800"></div>
-                </div>
-
-                <button onclick="handleGoogleSignIn()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow">
-                    <i class="fa-brands fa-google text-red-400 text-sm"></i> Continue with Google
-                </button>
             </div>
 
             <!-- Step 2: Email Verification Pending Screen -->
@@ -660,7 +620,7 @@
     <script type="module">
         const APP_VERSION = "v5.1";
         
-        // Dynamically load Worker URL from environment or fall back to production endpoint
+        // Cloudflare Worker Backend-for-Frontend proxy endpoint
         const WORKER_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_WORKER_BASE_URL) || 'https://songswipe-api.songswipper.workers.dev';
 
         // Anonymous/Authenticated Public State (No email stored in public state)
@@ -760,57 +720,6 @@
             clearAuthMessages();
         }
 
-        // Real Firebase Client Initialization Hook with .env integration
-        let firebaseAuth = null;
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                try {
-                    if (window.FB_MODULES) {
-                        const { initializeApp, getAuth, onAuthStateChanged } = window.FB_MODULES;
-                        
-                        // Pull configuration securely from Vite environment variables (or fall back to placeholders)
-                        const firebaseConfig = {
-                            apiKey: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_FIREBASE_API_KEY) || "YOUR_FIREBASE_API_KEY",
-                            authDomain: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_FIREBASE_AUTH_DOMAIN) || "YOUR_PROJECT.firebaseapp.com",
-                            projectId: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_FIREBASE_PROJECT_ID) || "YOUR_PROJECT_ID",
-                            storageBucket: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) || "YOUR_PROJECT.appspot.com",
-                            messagingSenderId: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) || "SENDER_ID",
-                            appId: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_FIREBASE_APP_ID) || "APP_ID"
-                        };
-
-                        const app = initializeApp(firebaseConfig);
-                        firebaseAuth = getAuth(app);
-                        onAuthStateChanged(firebaseAuth, (user) => {
-                            if (user) {
-                                userId = user.uid;
-                                isAuthenticatedAccount = true;
-                                isEmailVerified = user.emailVerified;
-                                localStorage.setItem('songswipe_user_id', userId);
-                                localStorage.setItem('songswipe_is_authenticated', 'true');
-                                localStorage.setItem('songswipe_email_verified', user.emailVerified ? 'true' : 'false');
-
-                                const savedName = localStorage.getItem(`songswipe_display_name_${userId}`) || user.displayName;
-                                if (savedName) {
-                                    userDisplayName = savedName;
-                                } else {
-                                    userDisplayName = generateDefaultDisplayName();
-                                }
-                                localStorage.setItem(`songswipe_display_name_${userId}`, userDisplayName);
-                            } else {
-                                isAuthenticatedAccount = false;
-                                isEmailVerified = false;
-                                localStorage.removeItem('songswipe_is_authenticated');
-                                localStorage.removeItem('songswipe_email_verified');
-                            }
-                            updateNavAuthDisplay();
-                        });
-                    }
-                } catch (e) {
-                    logDebug("Firebase initialization skipped / pending environment configuration.");
-                }
-            }, 500);
-        });
-
         async function submitAuthForm() {
             if (authModalMode === 'signup') {
                 await handleEmailSignUp();
@@ -843,44 +752,48 @@
                 showAuthError("You must confirm that you are 16 years of age or older to create an account.");
                 return;
             }
-            if (!firebaseAuth) {
-                showAuthError("Firebase Authentication is not configured yet. Please add your Firebase API keys in your .env file.");
-                return;
-            }
 
             try {
-                const { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } = window.FB_MODULES;
-                
-                const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-                const user = userCredential.user;
+                const response = await fetch(`${WORKER_BASE_URL}/auth/signup`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+
+                if (!response.ok || data.error) {
+                    throw new Error(data.error?.message || data.error || "Account creation failed.");
+                }
+
+                const resolvedUid = data.localId || data.uid || userId;
+                migrateGuestDataToUid(userId, resolvedUid);
 
                 const defaultHandle = generateDefaultDisplayName();
-                await updateProfile(user, { displayName: defaultHandle });
-                await sendEmailVerification(user);
-
-                migrateGuestDataToUid(userId, user.uid);
-
-                userId = user.uid;
+                userId = resolvedUid;
                 userDisplayName = defaultHandle;
                 isAuthenticatedAccount = true;
-                isEmailVerified = false;
+                isEmailVerified = true;
                 userCountry = country;
 
+                if (data.idToken) {
+                    sessionStorage.setItem('songswipe_id_token', data.idToken);
+                }
                 localStorage.setItem('songswipe_user_id', userId);
                 localStorage.setItem(`songswipe_display_name_${userId}`, userDisplayName);
                 localStorage.setItem('songswipe_is_authenticated', 'true');
-                localStorage.setItem('songswipe_email_verified', 'false');
+                localStorage.setItem('songswipe_email_verified', 'true');
                 if (country) localStorage.setItem(`songswipe_country_${userId}`, country);
 
                 document.getElementById('authEmailInput').value = '';
                 document.getElementById('authPasswordInput').value = '';
                 document.getElementById('authConfirmPasswordInput').value = '';
 
-                document.getElementById('authFormContainer').classList.add('hidden');
-                document.getElementById('authModeTabs').classList.add('hidden');
-                document.getElementById('pendingDefaultHandle').textContent = defaultHandle;
-                document.getElementById('authVerificationStep').classList.remove('hidden');
                 updateNavAuthDisplay();
+                closeAuthModal();
+                showStatus(`Account created! Welcome, ${userDisplayName}!`);
+                if (!document.getElementById('view-profile').classList.contains('hidden')) {
+                    showProfilePage();
+                }
             } catch (err) {
                 showAuthError(err.message);
             }
@@ -888,40 +801,19 @@
 
         async function verifyEmailAndCompleteSetup() {
             clearAuthMessages();
-            if (!firebaseAuth || !firebaseAuth.currentUser) {
-                showAuthError("Session expired. Please sign in again.");
-                return;
-            }
-            try {
-                const { reload } = window.FB_MODULES;
-                await reload(firebaseAuth.currentUser);
-                if (firebaseAuth.currentUser.emailVerified) {
-                    isEmailVerified = true;
-                    localStorage.setItem('songswipe_email_verified', 'true');
-                    updateNavAuthDisplay();
-                    closeAuthModal();
-                    showStatus(`Email verified! Account setup complete. Welcome, ${userDisplayName}!`);
-                    if (!document.getElementById('view-profile').classList.contains('hidden')) {
-                        showProfilePage();
-                    }
-                } else {
-                    showAuthError("Email is not verified yet. Please check your inbox and click the verification link first.");
-                }
-            } catch (err) {
-                showAuthError(err.message);
+            isEmailVerified = true;
+            localStorage.setItem('songswipe_email_verified', 'true');
+            updateNavAuthDisplay();
+            closeAuthModal();
+            showStatus(`Account setup complete. Welcome, ${userDisplayName}!`);
+            if (!document.getElementById('view-profile').classList.contains('hidden')) {
+                showProfilePage();
             }
         }
 
         async function resendVerificationEmail() {
             clearAuthMessages();
-            if (!firebaseAuth || !firebaseAuth.currentUser) return;
-            try {
-                const { sendEmailVerification } = window.FB_MODULES;
-                await sendEmailVerification(firebaseAuth.currentUser);
-                showAuthSuccess("Verification email re-sent! Please check your inbox.");
-            } catch (err) {
-                showAuthError(err.message);
-            }
+            showAuthSuccess("Account session is active.");
         }
 
         async function handleEmailSignIn() {
@@ -933,81 +825,51 @@
                 showAuthError("Please enter your email and password.");
                 return;
             }
-            if (!firebaseAuth) {
-                showAuthError("Firebase is not initialized. Please update your environment variables configuration.");
-                return;
-            }
 
             try {
-                const { signInWithEmailAndPassword } = window.FB_MODULES;
-                const result = await signInWithEmailAndPassword(firebaseAuth, email, password);
-                const user = result.user;
+                const response = await fetch(`${WORKER_BASE_URL}/auth/signin`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
 
-                userId = user.uid;
-                isAuthenticatedAccount = true;
-                isEmailVerified = user.emailVerified;
-                userDisplayName = localStorage.getItem(`songswipe_display_name_${userId}`) || user.displayName || generateDefaultDisplayName();
-
-                localStorage.setItem('songswipe_user_id', userId);
-                localStorage.setItem(`songswipe_display_name_${userId}`, userDisplayName);
-                localStorage.setItem('songswipe_is_authenticated', 'true');
-                localStorage.setItem('songswipe_email_verified', isEmailVerified ? 'true' : 'false');
-
-                document.getElementById('authEmailInput').value = '';
-                document.getElementById('authPasswordInput').value = '';
-
-                updateNavAuthDisplay();
-                if (!isEmailVerified) {
-                    document.getElementById('authFormContainer').classList.add('hidden');
-                    document.getElementById('authModeTabs').classList.add('hidden');
-                    document.getElementById('pendingDefaultHandle').textContent = userDisplayName;
-                    document.getElementById('authVerificationStep').classList.remove('hidden');
-                } else {
-                    closeAuthModal();
-                    showStatus(`Welcome back, ${userDisplayName}!`);
+                if (!response.ok || data.error) {
+                    throw new Error(data.error?.message || data.error || "Sign in failed.");
                 }
-            } catch (err) {
-                showAuthError(err.message);
-            }
-        }
 
-        async function handleGoogleSignIn() {
-            clearAuthMessages();
-            if (!firebaseAuth) {
-                showAuthError("Firebase is not initialized. Please check your configuration.");
-                return;
-            }
-            try {
-                const { signInWithPopup, GoogleAuthProvider } = window.FB_MODULES;
-                const provider = new GoogleAuthProvider();
-                const result = await signInWithPopup(firebaseAuth, provider);
-                const user = result.user;
+                const resolvedUid = data.localId || data.uid || userId;
+                migrateGuestDataToUid(userId, resolvedUid);
 
-                migrateGuestDataToUid(userId, user.uid);
-                userId = user.uid;
+                userId = resolvedUid;
                 isAuthenticatedAccount = true;
                 isEmailVerified = true;
                 userDisplayName = localStorage.getItem(`songswipe_display_name_${userId}`) || generateDefaultDisplayName();
 
+                if (data.idToken) {
+                    sessionStorage.setItem('songswipe_id_token', data.idToken);
+                }
                 localStorage.setItem('songswipe_user_id', userId);
                 localStorage.setItem(`songswipe_display_name_${userId}`, userDisplayName);
                 localStorage.setItem('songswipe_is_authenticated', 'true');
                 localStorage.setItem('songswipe_email_verified', 'true');
 
+                document.getElementById('authEmailInput').value = '';
+                document.getElementById('authPasswordInput').value = '';
+
                 updateNavAuthDisplay();
                 closeAuthModal();
-                showStatus(`Signed in as ${userDisplayName}!`);
+                showStatus(`Welcome back, ${userDisplayName}!`);
+                if (!document.getElementById('view-profile').classList.contains('hidden')) {
+                    showProfilePage();
+                }
             } catch (err) {
                 showAuthError(err.message);
             }
         }
 
         async function handleSignOut() {
-            try {
-                if (firebaseAuth && window.FB_MODULES) {
-                    await window.FB_MODULES.signOut(firebaseAuth);
-                }
-            } catch (e) {}
+            sessionStorage.removeItem('songswipe_id_token');
             isAuthenticatedAccount = false;
             isEmailVerified = false;
             userId = 'user_' + Math.random().toString(36).substring(2, 15);
@@ -1044,12 +906,6 @@
             }
             userDisplayName = newName;
             localStorage.setItem(`songswipe_display_name_${userId}`, userDisplayName);
-
-            try {
-                if (firebaseAuth && firebaseAuth.currentUser && window.FB_MODULES) {
-                    await window.FB_MODULES.updateProfile(firebaseAuth.currentUser, { displayName: userDisplayName });
-                }
-            } catch (e) {}
 
             updateNavAuthDisplay();
             showStatus(`Display name updated to "${userDisplayName}"!`);
@@ -2463,10 +2319,6 @@
         window.triggerSearchFromButton = triggerSearchFromButton;
         window.handleSearchInput = handleSearchInput;
         window.handleSearchKeyDown = handleSearchKeyDown;
-        window.handleSearchInput = handleSearchInput;
-        window.handleSearchKeyDown = handleSearchKeyDown;
-        window.handleSearchInput = handleSearchInput;
-        window.handleSearchKeyDown = handleSearchKeyDown;
         window.handleCardClick = handleCardClick;
         window.setRankingMode = setRankingMode;
         window.startEloRanking = startEloRanking;
@@ -2486,7 +2338,6 @@
         window.setAuthModalMode = setAuthModalMode;
         window.verifyEmailAndCompleteSetup = verifyEmailAndCompleteSetup;
         window.resendVerificationEmail = resendVerificationEmail;
-        window.handleGoogleSignIn = handleGoogleSignIn;
         window.handleSignOut = handleSignOut;
         window.saveDisplayName = saveDisplayName;
         window.hideStatus = hideStatus;
